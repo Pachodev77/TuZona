@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuZona - Clasificados en Colombia</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">TuZona</a></h1>
+                <p>Clasificados en Colombia</p>
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="¿Qué estás buscando?">
+                <select id="region">
+                    <option value="">Toda Colombia</option>
+                    <option value="Amazonas">Amazonas</option>
+                    <option value="Antioquia">Antioquia</option>
+                    <option value="Arauca">Arauca</option>
+                    <option value="Atlántico">Atlántico</option>
+                    <option value="Bolívar">Bolívar</option>
+                    <option value="Boyacá">Boyacá</option>
+                    <option value="Caldas">Caldas</option>
+                    <option value="Caquetá">Caquetá</option>
+                    <option value="Casanare">Casanare</option>
+                    <option value="Cauca">Cauca</option>
+                    <option value="Cesar">Cesar</option>
+                    <option value="Chocó">Chocó</option>
+                    <option value="Córdoba">Córdoba</option>
+                    <option value="Cundinamarca">Cundinamarca</option>
+                    <option value="Guainía">Guainía</option>
+                    <option value="Guaviare">Guaviare</option>
+                    <option value="Huila">Huila</option>
+                    <option value="La Guajira">La Guajira</option>
+                    <option value="Magdalena">Magdalena</option>
+                    <option value="Meta">Meta</option>
+                    <option value="Nariño">Nariño</option>
+                    <option value="Norte de Santander">Norte de Santander</option>
+                    <option value="Putumayo">Putumayo</option>
+                    <option value="Quindío">Quindío</option>
+                    <option value="Risaralda">Risaralda</option>
+                    <option value="San Andrés y Providencia">San Andrés y Providencia</option>
+                    <option value="Santander">Santander</option>
+                    <option value="Sucre">Sucre</option>
+                    <option value="Tolima">Tolima</option>
+                    <option value="Valle del Cauca">Valle del Cauca</option>
+                    <option value="Vaupés">Vaupés</option>
+                    <option value="Vichada">Vichada</option>
+                    <option value="Bogotá">Bogotá</option>
+                </select>
+                <button class="search-btn"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+            <div class="user-actions">
+                <a href="publish.html" class="btn btn-outline"><i class="fas fa-plus"></i> Publicar</a>
+                <a href="#" class="btn"><i class="fas fa-user"></i> Mi Cuenta</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a href="category.html?category=Vehículos"><i class="fas fa-car"></i> Vehículos</a></li>
+                <li><a href="category.html?category=Inmuebles"><i class="fas fa-home"></i> Inmuebles</a></li>
+                <li><a href="category.html?category=Celulares"><i class="fas fa-mobile-alt"></i> Celulares</a></li>
+                <li><a href="category.html?category=Computación"><i class="fas fa-laptop"></i> Computación</a></li>
+                <li><a href="category.html?category=Moda"><i class="fas fa-tshirt"></i> Moda</a></li>
+                <li><a href="#"><i class="fas fa-ellipsis-h"></i> Más</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <section class="category-results">
+            <div class="section-header">
+                <h2 id="category-title">Resultados para...</h2>
+                <a href="index.html" class="see-all">Volver al inicio</a>
+            </div>
+            <div class="ads-grid" id="category-ads">
+                <!-- Ads will be loaded by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>TuZona</h3>
+                    <p>El mejor lugar para comprar y vender en Colombia</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Explorar</h4>
+                    <ul>
+                        <li><a href="#">Inicio</a></li>
+                        <li><a href="#">Categorías</a></li>
+                        <li><a href="#">Regiones</a></li>
+                        <li><a href="#">Tendencias</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Cuenta</h4>
+                    <ul>
+                        <li><a href="#">Mi cuenta</a></li>
+                        <li><a href="#">Mis anuncios</a></li>
+                        <li><a href="#">Mensajes</a></li>
+                        <li><a href="#">Favoritos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contacto</h4>
+                    <ul>
+                        <li><a href="#">Centro de ayuda</a></li>
+                        <li><a href="#">Términos de uso</a></li>
+                        <li><a href="#">Política de privacidad</a></li>
+                        <li><a href="#">Contáctanos</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 TuZona - Todos los derechos reservados</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/category.js"></script>
+</body>
+</html>

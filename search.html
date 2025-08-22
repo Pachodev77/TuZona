@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuZona - Resultados de Búsqueda</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">TuZona</a></h1>
+                <p>Clasificados en Colombia</p>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="¿Qué estás buscando?">
+                <select id="region">
+                    <option value="">Toda Colombia</option>
+                    <option value="Amazonas">Amazonas</option>
+                    <option value="Antioquia">Antioquia</option>
+                    <option value="Arauca">Arauca</option>
+                    <option value="Atlántico">Atlántico</option>
+                    <option value="Bolívar">Bolívar</option>
+                    <option value="Boyacá">Boyacá</option>
+                    <option value="Caldas">Caldas</option>
+                    <option value="Caquetá">Caquetá</option>
+                    <option value="Casanare">Casanare</option>
+                    <option value="Cauca">Cauca</option>
+                    <option value="Cesar">Cesar</option>
+                    <option value="Chocó">Chocó</option>
+                    <option value="Córdoba">Córdoba</option>
+                    <option value="Cundinamarca">Cundinamarca</option>
+                    <option value="Guainía">Guainía</option>
+                    <option value="Guaviare">Guaviare</option>
+                    <option value="Huila">Huila</option>
+                    <option value="La Guajira">La Guajira</option>
+                    <option value="Magdalena">Magdalena</option>
+                    <option value="Meta">Meta</option>
+                    <option value="Nariño">Nariño</option>
+                    <option value="Norte de Santander">Norte de Santander</option>
+                    <option value="Putumayo">Putumayo</option>
+                    <option value="Quindío">Quindío</option>
+                    <option value="Risaralda">Risaralda</option>
+                    <option value="San Andrés y Providencia">San Andrés y Providencia</option>
+                    <option value="Santander">Santander</option>
+                    <option value="Sucre">Sucre</option>
+                    <option value="Tolima">Tolima</option>
+                    <option value="Valle del Cauca">Valle del Cauca</option>
+                    <option value="Vaupés">Vaupés</option>
+                    <option value="Vichada">Vichada</option>
+                    <option value="Bogotá">Bogotá</option>
+                </select>
+                <button class="search-btn" id="search-button"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+            <div class="user-actions">
+                <a href="publish.html" class="btn btn-outline"><i class="fas fa-plus"></i> Publicar</a>
+                <a href="#" class="btn"><i class="fas fa-user"></i> Mi Cuenta</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <section class="search-results">
+            <div class="section-header">
+                <h2 id="search-title">Resultados de Búsqueda</h2>
+                <a href="index.html" class="see-all">Volver al inicio</a>
+            </div>
+            <div class="ads-grid" id="search-ads">
+                <!-- Ads will be loaded by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2023 TuZona - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/search.js"></script>
+</body>
+</html>

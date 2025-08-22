@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuZona - Publicar Anuncio</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1><a href="index.html" style="text-decoration: none; color: inherit;">TuZona</a></h1>
+                <p>Clasificados en Colombia</p>
+            </div>
+            <div class="user-actions">
+                <a href="index.html" class="btn"><i class="fas fa-home"></i> Volver al inicio</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <section class="publish-form-container">
+            <h2>Publicar un nuevo anuncio</h2>
+            <form id="publish-form" class="publish-form">
+                <div class="form-section">
+                    <h3>Información del Anuncio</h3>
+                    <div class="form-group">
+                        <label for="title">Título del anuncio</label>
+                        <input type="text" id="title" name="title" placeholder="Ej: iPhone 13 Pro Max en excelente estado" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Descripción</label>
+                        <textarea id="description" name="description" rows="10" placeholder="Describe tu artículo en detalle..." required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Detalles del Anuncio</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="price">Precio</label>
+                            <input type="number" id="price" name="price" placeholder="Ej: 3500000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Categoría</label>
+                            <select id="category" name="category" required>
+                                <option value="">Selecciona una categoría</option>
+                                <option value="Vehículos">Vehículos</option>
+                                <option value="Inmuebles">Inmuebles</option>
+                                <option value="Celulares">Celulares</option>
+                                <option value="Computación">Computación</option>
+                                <option value="Moda">Moda</option>
+                                <option value="Hogar">Hogar</option>
+                                <option value="Electrónica">Electrónica</option>
+                                <option value="Deportes">Deportes</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="condition">Condición</label>
+                            <select id="condition" name="condition" required>
+                                <option value="">Selecciona una condición</option>
+                                <option value="Nuevo">Nuevo</option>
+                                <option value="Usado">Usado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="region">Región</label>
+                            <select id="region" name="region" required>
+                                <option value="">Selecciona una región</option>
+                                <option value="Amazonas">Amazonas</option>
+                                <option value="Antioquia">Antioquia</option>
+                                <option value="Arauca">Arauca</option>
+                                <option value="Atlántico">Atlántico</option>
+                                <option value="Bolívar">Bolívar</option>
+                                <option value="Boyacá">Boyacá</option>
+                                <option value="Caldas">Caldas</option>
+                                <option value="Caquetá">Caquetá</option>
+                                <option value="Casanare">Casanare</option>
+                                <option value="Cauca">Cauca</option>
+                                <option value="Cesar">Cesar</option>
+                                <option value="Chocó">Chocó</option>
+                                <option value="Córdoba">Córdoba</option>
+                                <option value="Cundinamarca">Cundinamarca</option>
+                                <option value="Guainía">Guainía</option>
+                                <option value="Guaviare">Guaviare</option>
+                                <option value="Huila">Huila</option>
+                                <option value="La Guajira">La Guajira</option>
+                                <option value="Magdalena">Magdalena</option>
+                                <option value="Meta">Meta</option>
+                                <option value="Nariño">Nariño</option>
+                                <option value="Norte de Santander">Norte de Santander</option>
+                                <option value="Putumayo">Putumayo</option>
+                                <option value="Quindío">Quindío</option>
+                                <option value="Risaralda">Risaralda</option>
+                                <option value="San Andrés y Providencia">San Andrés y Providencia</option>
+                                <option value="Santander">Santander</option>
+                                <option value="Sucre">Sucre</option>
+                                <option value="Tolima">Tolima</option>
+                                <option value="Valle del Cauca">Valle del Cauca</option>
+                                <option value="Vaupés">Vaupés</option>
+                                <option value="Vichada">Vichada</option>
+                                <option value="Bogotá">Bogotá</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Información del Vendedor</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="seller-name">Nombre del vendedor</label>
+                            <input type="text" id="seller-name" name="seller-name" placeholder="Ej: Juan Pérez" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="seller-phone">Teléfono de contacto</label>
+                            <input type="tel" id="seller-phone" name="seller-phone" placeholder="Ej: 3001234567" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Imagen del Anuncio</h3>
+                    <div class="form-group">
+                        <label for="image">URL de la imagen</label>
+                        <input type="url" id="image" name="image" placeholder="https://ejemplo.com/imagen.jpg" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Publicar Anuncio</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2023 TuZona - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/publish.js"></script>
+</body>
+</html>
