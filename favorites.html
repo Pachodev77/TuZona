@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Favoritos - TuZona</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <a href="index.html" class="logo-link">
+                    <img src="images/tuzona.png" alt="TuZona - Clasificados en Colombia" class="logo-img">
+                </a>
+            </div>
+            <div class="user-actions">
+                <a href="publish.html" class="btn"><i class="fas fa-plus"></i> Publicar</a>
+                <a href="account.html" class="btn btn-outline"><i class="fas fa-user"></i> Mi Cuenta</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <div class="page-header">
+            <h1>Mis Favoritos</h1>
+            <nav class="breadcrumb">
+                <a href="index.html">Inicio</a> > <span>Mis Favoritos</span>
+            </nav>
+        </div>
+
+        <div class="favorites-container">
+            <div class="filters">
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar en favoritos...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <div class="sort-options">
+                    <span>Ordenar por:</span>
+                    <select id="sort-favorites">
+                        <option value="recent">Más recientes</option>
+                        <option value="price-asc">Precio: menor a mayor</option>
+                        <option value="price-desc">Precio: mayor a menor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="favorites-list" id="favorites-list">
+                <!-- Favorites will be loaded here by JavaScript -->
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando tus favoritos...</p>
+                </div>
+            </div>
+
+            <div class="empty-state" id="empty-favorites" style="display: none;">
+                <i class="fas fa-heart"></i>
+                <h3>No tienes favoritos guardados</h3>
+                <p>Guarda tus anuncios favoritos para encontrarlos fácilmente más tarde.</p>
+                <a href="index.html" class="btn">Explorar anuncios</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Acerca de TuZona</h3>
+                    <p>El mejor lugar para comprar y vender productos y servicios en Colombia.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Enlaces útiles</h3>
+                    <ul>
+                        <li><a href="#">Términos y condiciones</a></li>
+                        <li><a href="#">Política de privacidad</a></li>
+                        <li><a href="#">Ayuda y soporte</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contáctanos</h3>
+                    <p>Email: info@tuzona.com</p>
+                    <p>Teléfono: +57 300 123 4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 TuZona. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/account.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the dashboard to access user data
+        const dashboard = new UserDataManager();
+        
+        // Display favorites
+        function displayFavorites() {
+            const favoritesList = document.getElementById('favorites-list');
+            const emptyState = document.getElementById('empty-favorites');
+            
+            const favoriteAds = dashboard.ads.filter(ad => dashboard.favorites.includes(ad.id));
+            
+            if (favoriteAds.length === 0) {
+                favoritesList.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            // Sort favorites
+            const sortBy = document.getElementById('sort-favorites').value;
+            favoriteAds.sort((a, b) => {
+                if (sortBy === 'recent') {
+                    return new Date(b.created) - new Date(a.created);
+                } else if (sortBy === 'price-asc') {
+                    return a.price - b.price;
+                } else if (sortBy === 'price-desc') {
+                    return b.price - a.price;
+                }
+                return 0;
+            });
+            
+            // Display favorites
+            favoritesList.innerHTML = '';
+            favoriteAds.forEach(ad => {
+                const adElement = document.createElement('div');
+                adElement.className = 'ad-list-item';
+                adElement.dataset.adId = ad.id;
+                adElement.innerHTML = `
+                    <div class="ad-list-image">
+                        <img src="${ad.images?.[0] || 'images/placeholder.jpg'}" alt="${ad.title}">
+                        <span class="status-badge ${ad.status || 'active'}">
+                            ${dashboard.getStatusText(ad.status)}
+                        </span>
+                        <button class="btn-icon btn-remove-favorite" title="Quitar de favoritos">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    <div class="ad-list-details">
+                        <h3><a href="ad.html?id=${ad.id}">${ad.title}</a></h3>
+                        <p class="ad-list-price">${dashboard.formatPrice(ad.price)}</p>
+                        <div class="ad-list-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> ${ad.location || 'Ubicación no especificada'}</span>
+                            <span><i class="far fa-calendar-alt"></i> ${dashboard.formatDate(ad.created)}</span>
+                        </div>
+                    </div>
+                `;
+                favoritesList.appendChild(adElement);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.btn-remove-favorite').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const adId = this.closest('[data-ad-id]').dataset.adId;
+                    dashboard.removeFromFavorites(adId);
+                    displayFavorites(); // Refresh the list
+                    
+                    // Show toast notification
+                    const toast = document.createElement('div');
+                    toast.className = 'toast';
+                    toast.textContent = 'Anuncio eliminado de favoritos';
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
+                });
+            });
+        }
+        
+        // Initialize sort functionality
+        document.getElementById('sort-favorites').addEventListener('change', displayFavorites);
+        
+        // Initial display
+        displayFavorites();
+    });
+    </script>
+</body>
+</html>

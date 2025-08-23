@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensajes - TuZona</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .messages-container {
+            display: flex;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .conversations-list {
+            width: 350px;
+            border-right: 1px solid #eee;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .conversation {
+            padding: 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .conversation:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .conversation.active {
+            background-color: #f0f7ff;
+            border-left: 3px solid #3498db;
+        }
+        
+        .conversation-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #777;
+        }
+        
+        .conversation-details {
+            flex: 1;
+        }
+        
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .conversation-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .conversation-time {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .conversation-preview {
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .unread-badge {
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .message-detail {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: 70vh;
+        }
+        
+        .message-header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .message-back {
+            display: none;
+            margin-right: 15px;
+            cursor: pointer;
+            color: #3498db;
+        }
+        
+        .message-recipient {
+            font-weight: 600;
+        }
+        
+        .message-actions {
+            margin-left: auto;
+        }
+        
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            max-width: 70%;
+        }
+        
+        .message.received {
+            margin-right: auto;
+        }
+        
+        .message.sent {
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message-bubble {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 5px;
+            position: relative;
+            word-wrap: break-word;
+        }
+        
+        .received .message-bubble {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-top-left-radius: 5px;
+        }
+        
+        .sent .message-bubble {
+            background-color: #3498db;
+            color: white;
+            border-top-right-radius: 5px;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .message-composer {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background-color: #fff;
+        }
+        
+        .composer-actions {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .composer-actions button {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 18px;
+            margin-right: 15px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .composer-input {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 10px 20px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            min-height: 40px;
+            max-height: 120px;
+        }
+        
+        .no-conversation-selected {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .no-conversation-selected i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .no-conversations {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .no-conversations i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .conversations-list {
+                width: 100%;
+                display: block;
+            }
+            
+            .message-detail {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: white;
+                z-index: 100;
+            }
+            
+            .message-detail.active {
+                display: flex;
+            }
+            
+            .message-back {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <a href="index.html" class="logo-link">
+                    <img src="images/tuzona.png" alt="TuZona - Clasificados en Colombia" class="logo-img">
+                </a>
+            </div>
+            <div class="user-actions">
+                <a href="publish.html" class="btn"><i class="fas fa-plus"></i> Publicar</a>
+                <a href="account.html" class="btn btn-outline"><i class="fas fa-user"></i> Mi Cuenta</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <div class="page-header">
+            <h1>Mensajes</h1>
+            <nav class="breadcrumb">
+                <a href="index.html">Inicio</a> > <span>Mensajes</span>
+            </nav>
+        </div>
+
+        <div class="messages-container" id="messages-container">
+            <div class="conversations-list" id="conversations-list">
+                <!-- Conversations will be loaded here by JavaScript -->
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando conversaciones...</p>
+                </div>
+            </div>
+            
+            <div class="message-detail" id="message-detail">
+                <div class="message-header">
+                    <div class="message-back" id="back-to-conversations">
+                        <i class="fas fa-arrow-left"></i>
+                    </div>
+                    <div class="message-recipient" id="message-recipient">
+                        Selecciona una conversación
+                    </div>
+                    <div class="message-actions">
+                        <button class="btn-icon" id="delete-conversation" title="Eliminar conversación">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="messages" id="messages">
+                    <div class="no-conversation-selected">
+                        <i class="far fa-comment-dots"></i>
+                        <h3>Selecciona una conversación</h3>
+                        <p>Elige una conversación para ver los mensajes</p>
+                    </div>
+                </div>
+                
+                <form class="message-composer" id="message-form" style="display: none;">
+                    <div class="composer-actions">
+                        <button type="button" title="Adjuntar archivo">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button type="button" title="Añadir imagen">
+                            <i class="far fa-image"></i>
+                        </button>
+                    </div>
+                    <div class="composer-input-container">
+                        <textarea 
+                            class="composer-input" 
+                            id="message-input" 
+                            placeholder="Escribe un mensaje..."
+                            rows="1"
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="display: none;">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Acerca de TuZona</h3>
+                    <p>El mejor lugar para comprar y vender productos y servicios en Colombia.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Enlaces útiles</h3>
+                    <ul>
+                        <li><a href="#">Términos y condiciones</a></li>
+                        <li><a href="#">Política de privacidad</a></li>
+                        <li><a href="#">Ayuda y soporte</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contáctanos</h3>
+                    <p>Email: info@tuzona.com</p>
+                    <p>Teléfono: +57 300 123 4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 TuZona. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/account.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dashboard = new UserDataManager();
+        const conversationsList = document.getElementById('conversations-list');
+        const messageDetail = document.getElementById('message-detail');
+        const messagesContainer = document.getElementById('messages');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const messageRecipient = document.getElementById('message-recipient');
+        const backToConversations = document.getElementById('back-to-conversations');
+        const deleteConversationBtn = document.getElementById('delete-conversation');
+        
+        let currentConversation = null;
+        
+        // Sample conversations data (in a real app, this would come from an API)
+        const conversations = [
+            {
+                id: 'conv1',
+                adId: 'ad_1',
+                adTitle: 'Apartamento en El Poblado',
+                participant: 'Carlos Gómez',
+                lastMessage: 'Hola, ¿el apartamento incluye parqueadero?',
+                time: 'Hace 2 horas',
+                unread: true,
+                avatar: 'CG'
+            },
+            {
+                id: 'conv2',
+                adId: 'ad_2',
+                adTitle: 'iPhone 12 Pro Max 256GB',
+                participant: 'Ana Martínez',
+                lastMessage: '¿Aceptarías $3.800.000?',
+                time: 'Ayer',
+                unread: false,
+                avatar: 'AM'
+            },
+            {
+                id: 'conv3',
+                adId: 'ad_3',
+                adTitle: 'Moto deportiva 2023',
+                participant: 'TuZona',
+                lastMessage: 'Tu anuncio ha sido aprobado y publicado',
+                time: '15/08/2023',
+                unread: false,
+                avatar: 'TZ',
+                isSystem: true
+            }
+        ];
+        
+        // Sample messages data (in a real app, this would come from an API)
+        const messagesData = {
+            conv1: [
+                {
+                    id: 'msg1',
+                    sender: 'Carlos Gómez',
+                    content: 'Hola, ¿el apartamento incluye parqueadero?',
+                    time: '14:30',
+                    isMe: false
+                },
+                {
+                    id: 'msg2',
+                    sender: 'Yo',
+                    content: 'Sí, incluye un parqueadero cubierto.',
+                    time: '14:32',
+                    isMe: true
+                },
+                {
+                    id: 'msg3',
+                    sender: 'Carlos Gómez',
+                    content: 'Perfecto, ¿podría visitarlo mañana en la tarde?',
+                    time: '14:35',
+                    isMe: false
+                }
+            ],
+            conv2: [
+                {
+                    id: 'msg4',
+                    sender: 'Ana Martínez',
+                    content: 'Hola, ¿el iPhone sigue disponible?',
+                    time: 'Ayer, 10:15',
+                    isMe: false
+                },
+                {
+                    id: 'msg5',
+                    sender: 'Yo',
+                    content: 'Sí, aún está disponible. ¿Te interesa?',
+                    time: 'Ayer, 10:20',
+                    isMe: true
+                },
+                {
+                    id: 'msg6',
+                    sender: 'Ana Martínez',
+                    content: 'Sí, ¿aceptarías $3.800.000?',
+                    time: 'Ayer, 10:25',
+                    isMe: false
+                }
+            ]
+        };
+        
+        // Display conversations list
+        function displayConversations() {
+            if (conversations.length === 0) {
+                conversationsList.innerHTML = `
+                    <div class="no-conversations">
+                        <i class="far fa-comments"></i>
+                        <h3>No tienes mensajes</h3>
+                        <p>Cuando tengas mensajes, aparecerán aquí.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            conversationsList.innerHTML = conversations.map(conv => `
+                <div class="conversation" data-conversation-id="${conv.id}">
+                    <div class="conversation-avatar">
+                        ${conv.avatar}
+                    </div>
+                    <div class="conversation-details">
+                        <div class="conversation-header">
+                            <span class="conversation-name">${conv.participant}</span>
+                            <span class="conversation-time">${conv.time}</span>
+                        </div>
+                        <div class="conversation-preview">
+                            ${conv.isSystem ? '<i class="fas fa-bell"></i> ' : ''}
+                            ${conv.lastMessage}
+                            ${conv.unread ? '<span class="unread-badge">Nuevo</span>' : ''}
+                        </div>
+                        <div class="conversation-ad">
+                            <small>${conv.adTitle}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add event listeners to conversations
+            document.querySelectorAll('.conversation').forEach(conv => {
+                conv.addEventListener('click', function() {
+                    const conversationId = this.dataset.conversationId;
+                    openConversation(conversationId);
+                });
+            });
+        }
+        
+        // Open a conversation
+        function openConversation(conversationId) {
+            const conversation = conversations.find(c => c.id === conversationId);
+            if (!conversation) return;
+            
+            currentConversation = conversation;
+            
+            // Update UI
+            document.querySelectorAll('.conversation').forEach(c => {
+                c.classList.remove('active');
+                if (c.dataset.conversationId === conversationId) {
+                    c.classList.add('active');
+                }
+            });
+            
+            messageRecipient.textContent = conversation.participant;
+            displayMessages(conversationId);
+            
+            // Show message form if it's not a system message
+            messageForm.style.display = conversation.isSystem ? 'none' : 'block';
+            
+            // On mobile, switch to message view
+            if (window.innerWidth <= 768) {
+                conversationsList.style.display = 'none';
+                messageDetail.classList.add('active');
+            }
+            
+            // Mark as read
+            conversation.unread = false;
+            displayConversations();
+        }
+        
+        // Display messages for a conversation
+        function displayMessages(conversationId) {
+            const messages = messagesData[conversationId] || [];
+            
+            if (messages.length === 0) {
+                messagesContainer.innerHTML = `
+                    <div class="no-conversation-selected">
+                        <i class="far fa-comment-dots"></i>
+                        <h3>No hay mensajes</h3>
+                        <p>Envía un mensaje para iniciar la conversación</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            messagesContainer.innerHTML = messages.map(msg => `
+                <div class="message ${msg.isMe ? 'sent' : 'received'}">
+                    <div class="message-bubble">
+                        ${msg.content}
+                    </div>
+                    <div class="message-time">
+                        ${msg.time}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Handle back button on mobile
+        backToConversations.addEventListener('click', function() {
+            conversationsList.style.display = 'block';
+            messageDetail.classList.remove('active');
+        });
+        
+        // Handle message form submission
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = messageInput.value.trim();
+            
+            if (message && currentConversation) {
+                // In a real app, this would send the message to the server
+                const newMessage = {
+                    id: 'msg' + Date.now(),
+                    sender: 'Yo',
+                    content: message,
+                    time: 'Ahora',
+                    isMe: true
+                };
+                
+                // Add to messages data
+                if (!messagesData[currentConversation.id]) {
+                    messagesData[currentConversation.id] = [];
+                }
+                messagesData[currentConversation.id].push(newMessage);
+                
+                // Update UI
+                displayMessages(currentConversation.id);
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // Auto-resize textarea
+                messageInput.style.height = 'auto';
+                messageInput.style.height = messageInput.scrollHeight + 'px';
+                
+                // In a real app, you would also update the last message in the conversations list
+                const conversation = conversations.find(c => c.id === currentConversation.id);
+                if (conversation) {
+                    conversation.lastMessage = message.length > 30 ? message.substring(0, 30) + '...' : message;
+                    conversation.time = 'Ahora';
+                    displayConversations();
+                }
+            }
+        });
+        
+        // Auto-resize textarea as user types
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+        
+        // Handle delete conversation
+        deleteConversationBtn.addEventListener('click', function() {
+            if (currentConversation && confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
+                // In a real app, this would delete the conversation from the server
+                const index = conversations.findIndex(c => c.id === currentConversation.id);
+                if (index > -1) {
+                    conversations.splice(index, 1);
+                }
+                
+                // Update UI
+                displayConversations();
+                
+                // Show no conversation selected
+                messagesContainer.innerHTML = `
+                    <div class="no-conversation-selected">
+                        <i class="far fa-comment-dots"></i>
+                        <h3>Selecciona una conversación</h3>
+                        <p>Elige una conversación para ver los mensajes</p>
+                    </div>
+                `;
+                messageForm.style.display = 'none';
+                messageRecipient.textContent = 'Selecciona una conversación';
+                
+                // On mobile, go back to conversations list
+                if (window.innerWidth <= 768) {
+                    conversationsList.style.display = 'block';
+                    messageDetail.classList.remove('active');
+                }
+                
+                currentConversation = null;
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                conversationsList.style.display = 'block';
+                messageDetail.style.display = 'flex';
+            } else if (currentConversation) {
+                conversationsList.style.display = 'none';
+                messageDetail.style.display = 'flex';
+            } else {
+                conversationsList.style.display = 'block';
+                messageDetail.style.display = 'none';
+            }
+        });
+        
+        // Initialize
+        displayConversations();
+        
+        // Open conversation from URL hash if present
+        const hash = window.location.hash.substring(1);
+        if (hash.startsWith('conversation-')) {
+            const conversationId = hash.replace('conversation-', '');
+            openConversation(conversationId);
+        }
+    });
+    </script>
+</body>
+</html>

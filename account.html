@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuZona - Mi Cuenta</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
+        import { getFirestore, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js';
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBd-B3w6KanW3fk7vy5eAwtXO-bxXXl9eY",
+            authDomain: "tuzona-6df14.firebaseapp.com",
+            projectId: "tuzona-6df14",
+            storageBucket: "tuzona-6df14.appspot.com",
+            messagingSenderId: "826985285220",
+            appId: "1:826985285220:web:aad7f544961ecfdf2d4171",
+            measurementId: "G-5MFSKGHY36"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // Make them available globally
+        window.auth = auth;
+        window.db = db;
+        window.storage = storage;
+        window.signOut = signOut;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.updateDoc = updateDoc;
+        window.ref = ref;
+        window.uploadBytes = uploadBytes;
+        window.getDownloadURL = getDownloadURL;
+
+        // Check auth state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // User is signed out, redirect to login
+                window.location.href = 'login.html';
+            } else {
+                // User is signed in, load their data
+                loadUserData(user.uid);
+            }
+        });
+
+        // Load user data from Firestore
+        async function loadUserData(userId) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', userId));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    updateUI(userData);
+                } else {
+                    console.log("No such document!");
+                }
+            } catch (error) {
+                console.error("Error loading user data: ", error);
+            }
+        }
+
+        // Update the UI with user data
+        function updateUI(userData) {
+            // Update profile section
+            if (userData.displayName) {
+                document.getElementById('user-name').textContent = userData.displayName;
+                document.getElementById('profile-name').value = userData.displayName;
+            }
+            
+            if (userData.email) {
+                document.getElementById('user-email').textContent = userData.email;
+                document.getElementById('profile-email').value = userData.email;
+            }
+            
+            if (userData.phone) {
+                document.getElementById('profile-phone').value = userData.phone;
+            }
+            
+            if (userData.location) {
+                document.getElementById('profile-location').value = userData.location;
+            }
+            
+            if (userData.photoURL) {
+                document.getElementById('avatar-preview').src = userData.photoURL;
+                document.querySelector('.user-avatar').src = userData.photoURL;
+            }
+        }
+
+        // Handle logout
+        window.handleLogout = function() {
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('Error signing out: ', error);
+            });
+        };
+
+        // Handle profile form submission
+        window.handleProfileSubmit = async function(e) {
+            e.preventDefault();
+            
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const userData = {
+                displayName: document.getElementById('profile-name').value,
+                email: document.getElementById('profile-email').value,
+                phone: document.getElementById('profile-phone').value,
+                location: document.getElementById('profile-location').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                await updateDoc(doc(db, 'users', user.uid), userData);
+                showAlert('Perfil actualizado correctamente', 'success');
+                updateUI(userData);
+            } catch (error) {
+                console.error('Error updating profile: ', error);
+                showAlert('Error al actualizar el perfil', 'error');
+            }
+        };
+
+        // Handle avatar upload
+        window.handleAvatarUpload = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Check file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showAlert('El archivo es demasiado grande. El tamaño máximo permitido es 2MB.', 'error');
+                return;
+            }
+
+            // Check file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!validTypes.includes(file.type)) {
+                showAlert('Formato de archivo no válido. Por favor, sube una imagen JPG o PNG.', 'error');
+                return;
+            }
+
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const storageRef = ref(storage, `users/${user.uid}/avatar.${file.name.split('.').pop()}`);
+            const uploadTask = uploadBytes(storageRef, file);
+
+            uploadTask.then((snapshot) => {
+                return getDownloadURL(snapshot.ref);
+            }).then((downloadURL) => {
+                // Update user's photoURL in Firestore
+                return updateDoc(doc(db, 'users', user.uid), {
+                    photoURL: downloadURL,
+                    updatedAt: new Date().toISOString()
+                });
+            }).then(() => {
+                // Update UI
+                document.getElementById('avatar-preview').src = downloadURL;
+                document.querySelector('.user-avatar').src = downloadURL;
+                showAlert('Foto de perfil actualizada correctamente', 'success');
+            }).catch((error) => {
+                console.error('Error uploading file: ', error);
+                showAlert('Error al subir la imagen. Por favor, inténtalo de nuevo.', 'error');
+            });
+        };
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const container = document.querySelector('.alerts-container');
+            if (container) {
+                container.appendChild(alertDiv);
+                
+                // Remove alert after 5 seconds
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="images/tuzona.png" alt="TuZona Logo" class="logo-img">
+                </a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="search.html">Buscar</a></li>
+                    <li><a href="publish.html">Publicar</a></li>
+                    <li><a href="account.html" class="active">Mi Cuenta</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons">
+                <button class="btn btn-outline" onclick="handleLogout()">Cerrar Sesión</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <div class="account-dashboard">
+            <!-- Sidebar -->
+            <aside class="account-sidebar">
+                <div class="user-profile">
+                    <div class="avatar">
+                        <img id="avatar-preview" src="https://via.placeholder.com/150" alt="User Avatar" class="user-avatar">
+                    </div>
+                    <h3 id="user-name">Cargando...</h3>
+                    <p id="user-email">usuario@ejemplo.com</p>
+                    <button class="btn btn-outline btn-sm" onclick="document.getElementById('avatar-upload').click()">
+                        Cambiar Foto
+                    </button>
+                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+                </div>
+                
+                <nav class="account-nav">
+                    <ul>
+                        <li><a href="#dashboard" class="active"><i class="fas fa-home"></i> Resumen</a></li>
+                        <li><a href="#profile"><i class="fas fa-user"></i> Mi Perfil</a></li>
+                        <li><a href="#ads"><i class="fas fa-tag"></i> Mis Anuncios</a></li>
+                        <li><a href="#favorites"><i class="fas fa-heart"></i> Favoritos</a></li>
+                        <li><a href="#messages"><i class="fas fa-envelope"></i> Mensajes</a></li>
+                        <li><a href="#settings"><i class="fas fa-cog"></i> Configuración</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <div class="account-content">
+                <!-- Alerts Container -->
+                <div class="alerts-container"></div>
+                
+                <!-- Dashboard Overview -->
+                <section id="dashboard" class="dashboard-section active">
+                    <div class="section-header">
+                        <h2>Resumen de la Cuenta</h2>
+                        <a href="publish.html" class="btn"><i class="fas fa-plus"></i> Nuevo Anuncio</a>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-tag"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Anuncios Activos</h3>
+                                <p class="stat-number">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Visitas Totales</h3>
+                                <p class="stat-number">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Mensajes Nuevos</h3>
+                                <p class="stat-number">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Valoración</h3>
+                                <p class="stat-number">0.0 <small>/ 5.0</small></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-activity">
+                        <h3>Actividad Reciente</h3>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <p>No hay actividad reciente para mostrar.</p>
+                                    <span class="activity-time">Hace unos momentos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Profile Settings -->
+                <section id="profile" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Configuración del Perfil</h2>
+                        <p>Administra tu información personal y preferencias de cuenta</p>
+                    </div>
+                    
+                    <form id="profile-form" onsubmit="handleProfileSubmit(event)" class="profile-form">
+                        <div class="form-group">
+                            <label for="profile-name">Nombre Completo</label>
+                            <input type="text" id="profile-name" name="name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-email">Correo Electrónico</label>
+                            <input type="email" id="profile-email" name="email" required disabled>
+                            <small class="text-muted">Para cambiar tu correo electrónico, por favor contacta al soporte.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-phone">Teléfono</label>
+                            <input type="tel" id="profile-phone" name="phone">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profile-location">Ubicación</label>
+                            <input type="text" id="profile-location" name="location" placeholder="Ciudad, País">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </section>
+                
+                <!-- Other sections will be added here -->
+                <section id="ads" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Mis Anuncios</h2>
+                        <a href="publish.html" class="btn"><i class="fas fa-plus"></i> Nuevo Anuncio</a>
+                    </div>
+                    <p>No tienes anuncios publicados aún.</p>
+                </section>
+                
+                <section id="favorites" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Mis Favoritos</h2>
+                    </div>
+                    <p>No tienes anuncios guardados en favoritos.</p>
+                </section>
+                
+                <section id="messages" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Mensajes</h2>
+                    </div>
+                    <p>No tienes mensajes nuevos.</p>
+                </section>
+                
+                <section id="settings" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Configuración de la Cuenta</h2>
+                    </div>
+                    
+                    <div class="settings-tabs">
+                        <div class="settings-sidebar">
+                            <div class="settings-menu">
+                                <a href="#account-settings" class="active">Cuenta</a>
+                                <a href="#privacy-settings">Privacidad</a>
+                                <a href="#notifications-settings">Notificaciones</a>
+                                <a href="#security-settings">Seguridad</a>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-content">
+                            <!-- Account Settings -->
+                            <div id="account-settings" class="settings-pane active">
+                                <h3>Configuración de la Cuenta</h3>
+                                <p class="text-muted">Administra la configuración básica de tu cuenta.</p>
+                                
+                                <form id="account-form" class="mt-4">
+                                    <div class="form-group">
+                                        <label>Idioma</label>
+                                        <select class="form-control">
+                                            <option>Español</option>
+                                            <option>English</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Zona Horaria</label>
+                                        <select class="form-control">
+                                            <option>UTC-05:00 (Ecuador, Colombia, Perú)</option>
+                                            <option>UTC-06:00 (México, Centroamérica)</option>
+                                            <option>UTC-04:00 (Bolivia, Venezuela, Chile)</option>
+                                            <option>UTC-03:00 (Argentina, Brasil, Uruguay)</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Privacy Settings -->
+                            <div id="privacy-settings" class="settings-pane">
+                                <h3>Configuración de Privacidad</h3>
+                                <p class="text-muted">Controla qué información es visible para otros usuarios.</p>
+                                
+                                <form id="privacy-form" class="mt-4">
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" id="show-email" class="form-check-input" checked>
+                                            <label for="show-email" class="form-check-label">Mostrar mi correo electrónico en mi perfil</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" id="show-phone" class="form-check-input" checked>
+                                            <label for="show-phone" class="form-check-label">Mostrar mi número de teléfono en mis anuncios</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" id="show-location" class="form-check-input" checked>
+                                            <label for="show-location" class="form-check-label">Mostrar mi ubicación aproximada</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Notification Settings -->
+                            <div id="notifications-settings" class="settings-pane">
+                                <h3>Configuración de Notificaciones</h3>
+                                <p class="text-muted">Administra cómo y cuándo recibes notificaciones.</p>
+                                
+                                <form id="notifications-form" class="mt-4">
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" id="email-notifications" class="form-check-input" checked>
+                                            <label for="email-notifications" class="form-check-label">Recibir notificaciones por correo electrónico</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" id="push-notifications" class="form-check-input" checked>
+                                            <label for="push-notifications" class="form-check-label">Recibir notificaciones en el navegador</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" id="promotional-emails" class="form-check-input">
+                                            <label for="promotional-emails" class="form-check-label">Recibir ofertas y promociones por correo</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Security Settings -->
+                            <div id="security-settings" class="settings-pane">
+                                <h3>Seguridad</h3>
+                                <p class="text-muted">Administra la seguridad de tu cuenta.</p>
+                                
+                                <div class="security-options">
+                                    <div class="security-option">
+                                        <h4>Cambiar Contraseña</h4>
+                                        <p>Actualiza tu contraseña regularmente para mantener tu cuenta segura.</p>
+                                        <button class="btn btn-outline" onclick="alert('Función en desarrollo')">Cambiar Contraseña</button>
+                                    </div>
+                                    
+                                    <div class="security-option">
+                                        <h4>Inicios de Sesión</h4>
+                                        <p>Revisa los dispositivos que han iniciado sesión en tu cuenta.</p>
+                                        <button class="btn btn-outline" onclick="alert('Función en desarrollo')">Ver Dispositivos</button>
+                                    </div>
+                                    
+                                    <div class="security-option danger-zone">
+                                        <h4>Zona de Peligro</h4>
+                                        <p>Elimina tu cuenta de forma permanente. Esta acción no se puede deshacer.</p>
+                                        <button class="btn btn-danger" onclick="if(confirm('¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.')) { alert('Cuenta eliminada (simulado)'); }">
+                                            Eliminar Mi Cuenta
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Acerca de TuZona</h3>
+                    <p>TuZona es una plataforma de anuncios clasificados donde puedes comprar y vender artículos de segunda mano.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Enlaces Rápidos</h3>
+                    <ul>
+                        <li><a href="#">Términos y Condiciones</a></li>
+                        <li><a href="#">Política de Privacidad</a></li>
+                        <li><a href="#">Preguntas Frecuentes</a></li>
+                        <li><a href="#">Contáctanos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contáctanos</h3>
+                    <p>Email: info@tuzona.com</p>
+                    <p>Teléfono: +123 456 7890</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 TuZona. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Tab navigation
+        document.querySelectorAll('.account-nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links and sections
+                document.querySelectorAll('.account-nav a').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Show corresponding section
+                const targetId = this.getAttribute('href').substring(1);
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+        
+        // Settings tab navigation
+        document.querySelectorAll('.settings-menu a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links and panes
+                document.querySelectorAll('.settings-menu a').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.settings-pane').forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Show corresponding pane
+                const targetId = this.getAttribute('href').substring(1);
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+        
+        // Handle form submissions
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Show success message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success';
+                alertDiv.textContent = 'Configuración guardada correctamente';
+                
+                const container = document.querySelector('.alerts-container');
+                if (container) {
+                    container.prepend(alertDiv);
+                    
+                    // Remove alert after 3 seconds
+                    setTimeout(() => {
+                        alertDiv.remove();
+                    }, 3000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

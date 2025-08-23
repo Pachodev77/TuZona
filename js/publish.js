@@ -131,6 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ads.push(newAd);
         saveAds(ads);
 
+        // Set current user
+        localStorage.setItem('currentUser', sellerName);
+
         alert('¡Anuncio publicado con éxito!');
         window.location.href = 'index.html';
     });

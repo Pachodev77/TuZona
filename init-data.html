@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicializar Datos de Prueba - TuZona</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 2rem 0;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-left-color: #4CAF50;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .status {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info-box {
+            background-color: #e2f3f5;
+            border-left: 4px solid #4CAF50;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Inicializar Datos de Prueba</h1>
+        
+        <div class="info-box">
+            <p>Esta página te ayudará a configurar datos de prueba para probar el panel de control de TuZona.</p>
+            <p>Se crearán los siguientes elementos:</p>
+            <ul>
+                <li>1 usuario de prueba (juan@ejemplo.com)</li>
+                <li>4 anuncios de ejemplo</li>
+                <li>Actividad reciente y estadísticas</li>
+            </ul>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Inicializando datos de prueba...</p>
+        </div>
+        
+        <button id="initBtn" class="btn">
+            <i class="fas fa-database"></i> Inicializar Datos
+        </button>
+        
+        <div id="successActions" style="display: none; margin-top: 2rem;">
+            <p>¡Datos inicializados correctamente!</p>
+            <a href="account.html" class="btn">
+                <i class="fas fa-tachometer-alt"></i> Ir al Panel de Control
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const initBtn = document.getElementById('initBtn');
+            const loading = document.getElementById('loading');
+            const statusDiv = document.getElementById('status');
+            const successActions = document.getElementById('successActions');
+            
+            // Check if data already exists
+            if (localStorage.getItem('currentUser')) {
+                statusDiv.textContent = 'Ya existen datos de prueba en el navegador.';
+                statusDiv.className = 'status success';
+                statusDiv.style.display = 'block';
+                successActions.style.display = 'block';
+                initBtn.style.display = 'none';
+            }
+            
+            initBtn.addEventListener('click', function() {
+                // Show loading state
+                loading.style.display = 'flex';
+                initBtn.disabled = true;
+                statusDiv.style.display = 'none';
+                
+                // Load the initialization script
+                const script = document.createElement('script');
+                script.src = 'js/init-sample-data.js';
+                script.onload = function() {
+                    loading.style.display = 'none';
+                    statusDiv.textContent = '¡Datos de prueba inicializados correctamente!';
+                    statusDiv.className = 'status success';
+                    statusDiv.style.display = 'block';
+                    successActions.style.display = 'block';
+                    initBtn.style.display = 'none';
+                };
+                script.onerror = function() {
+                    loading.style.display = 'none';
+                    statusDiv.textContent = 'Error al cargar los datos de prueba. Por favor, recarga la página e inténtalo de nuevo.';
+                    statusDiv.className = 'status error';
+                    statusDiv.style.display = 'block';
+                    initBtn.disabled = false;
+                };
+                
+                document.head.appendChild(script);
+            });
+            
+            // Add clear data button for development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                const clearBtn = document.createElement('button');
+                clearBtn.textContent = 'Borrar Datos (Solo Desarrollo)';
+                clearBtn.style.marginTop = '1rem';
+                clearBtn.style.background = '#dc3545';
+                clearBtn.className = 'btn';
+                clearBtn.onclick = function() {
+                    if (confirm('¿Estás seguro de que quieres borrar todos los datos? Esto no se puede deshacer.')) {
+                        localStorage.clear();
+                        statusDiv.textContent = 'Datos borrados correctamente. Recarga la página para continuar.';
+                        statusDiv.className = 'status success';
+                        statusDiv.style.display = 'block';
+                        successActions.style.display = 'none';
+                        initBtn.style.display = 'inline-block';
+                        initBtn.disabled = false;
+                    }
+                };
+                document.querySelector('.container').appendChild(clearBtn);
+            }
+        });
+    </script>
+</body>
+</html>
