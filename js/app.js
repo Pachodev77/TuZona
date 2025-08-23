@@ -126,10 +126,16 @@ const formatPrice = (price) => {
 
 // Create ad card HTML
 const createAdCard = (ad) => {
+    // Use the first image from the images array if available, otherwise fall back to the image property
+    const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMzAwIDIwMCI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y1ZjVmNSIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pgo8L3N2Zz4=';
+    const imageUrl = (ad.images && ad.images.length > 0) ? ad.images[0] : (ad.image || defaultImage);
+    
     return `
         <a href="ad.html?id=${ad.id}" class="ad-card" data-id="${ad.id}">
             <div class="ad-image">
-                <img src="${ad.image}" alt="${ad.title}">
+                <img src="${imageUrl}" 
+                     alt="${ad.title}" 
+                     onerror="this.onerror=null; this.src='${defaultImage}'">
                 <div class="ad-price">${formatPrice(ad.price)}</div>
             </div>
             <div class="ad-details">
@@ -211,31 +217,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Mobile menu toggle (for smaller screens)
 const setupMobileMenu = () => {
-    const menuToggle = document.createElement('button');
-    menuToggle.className = 'mobile-menu-toggle';
-    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    
     const mainNav = document.querySelector('.main-nav');
+    
+    // Only proceed if the navigation exists on the page
+    if (!mainNav) return;
+    
     const navList = mainNav.querySelector('ul');
+    if (!navList) return;
     
-    // Add mobile menu toggle button
-    mainNav.insertBefore(menuToggle, navList);
+    // Check if menu toggle already exists
+    let menuToggle = mainNav.querySelector('.mobile-menu-toggle');
     
-    // Toggle menu on click
-    menuToggle.addEventListener('click', () => {
-        navList.style.display = navList.style.display === 'flex' ? 'none' : 'flex';
-    });
+    if (!menuToggle) {
+        // Create menu toggle button if it doesn't exist
+        menuToggle = document.createElement('button');
+        menuToggle.className = 'mobile-menu-toggle';
+        menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        
+        // Add mobile menu toggle button
+        mainNav.insertBefore(menuToggle, navList);
+        
+        // Toggle menu on click
+        menuToggle.addEventListener('click', () => {
+            const isVisible = navList.style.display === 'flex';
+            navList.style.display = isVisible ? 'none' : 'flex';
+        });
+    }
     
     // Handle window resize
     const handleResize = () => {
+        if (!navList) return;
+        
         if (window.innerWidth > 768) {
             navList.style.display = 'flex';
-        } else {
+        } else if (window.innerWidth <= 768) {
             navList.style.display = 'none';
         }
     };
     
-    window.addEventListener('resize', handleResize);
+    // Only add the resize event listener if we haven't already
+    if (!window._mobileMenuInitialized) {
+        window.addEventListener('resize', handleResize);
+        window._mobileMenuInitialized = true;
+    }
     
     // Initial check
     handleResize();

@@ -1,24 +1,50 @@
 // Firebase Authentication Module
 // Handles user authentication using Firebase Authentication
 
-import { 
-    getAuth, 
+// Import Firebase initialization function
+import initializeFirebase from './firebase-config.js';
+
+// Initialize Firebase services
+let auth, db;
+let authModule, firestoreModule;
+
+// Initialize Firebase when this module is imported
+(async () => {
+    try {
+        // Import Firebase modules
+        [authModule, firestoreModule] = await Promise.all([
+            import('https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js'),
+            import('https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js')
+        ]);
+        
+        // Initialize Firebase
+        const firebase = await initializeFirebase();
+        auth = firebase.auth;
+        db = firebase.db;
+    } catch (error) {
+        console.error('Failed to initialize Firebase:', error);
+    }
+})();
+
+// Destructure auth functions
+const { 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
-    signOut as firebaseSignOut, 
-    sendEmailVerification as firebaseSendEmailVerification, 
-    sendPasswordResetEmail as firebaseSendPasswordResetEmail, 
-    onAuthStateChanged as firebaseOnAuthStateChanged,
-    updateProfile as firebaseUpdateProfile, 
-    updateEmail as firebaseUpdateEmail,
-    updatePassword as firebaseUpdatePassword, 
+    signOut: firebaseSignOut, 
+    sendEmailVerification: firebaseSendEmailVerification, 
+    sendPasswordResetEmail: firebaseSendPasswordResetEmail, 
+    onAuthStateChanged: firebaseOnAuthStateChanged,
+    updateProfile: firebaseUpdateProfile, 
+    updateEmail: firebaseUpdateEmail,
+    updatePassword: firebaseUpdatePassword, 
     reauthenticateWithCredential,
     EmailAuthProvider, 
     GoogleAuthProvider, 
     signInWithPopup 
-} from 'firebase/auth';
-import { 
-    getFirestore, 
+} = authModule || {};
+
+// Destructure firestore functions
+const { 
     doc, 
     setDoc, 
     getDoc, 
@@ -27,12 +53,7 @@ import {
     query,
     where,
     getDocs
-} from 'firebase/firestore';
-import { app } from './firebase-config';
-
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+} = firestoreModule || {};
 
 // Error messages mapping
 const ERROR_MESSAGES = {
@@ -198,14 +219,6 @@ export const signOut = async () => {
     }
 };
 
-/**
- * Check if user is authenticated
- * @returns {Promise<boolean>}
- */
-export const isAuthenticated = async () => {
-    const user = await getCurrentUser();
-    return !!user;
-};
 
 /**
  * Send password reset email

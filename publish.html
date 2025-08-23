@@ -6,6 +6,7 @@
     <title>TuZona - Publicar Anuncio</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/image-uploader.css">
 </head>
 <body>
     <!-- Header -->
@@ -36,6 +37,12 @@
                     <div class="form-group">
                         <label for="description">Descripción</label>
                         <textarea id="description" name="description" rows="10" placeholder="Describe tu artículo en detalle..." required></textarea>
+                    </div>
+                    <input type="hidden" id="main-image" name="mainImage" value="">
+                    <div class="form-group">
+                        <label>Imágenes del producto (Máx. 5)</label>
+                        <div id="image-uploader-container"></div>
+                        <input type="hidden" name="imageUrls" id="image-urls">
                     </div>
                 </div>
 
@@ -124,13 +131,6 @@
                     </div>
                 </div>
 
-                <div class="form-section">
-                    <h3>Imagen del Anuncio</h3>
-                    <div class="form-group">
-                        <label for="image">URL de la imagen</label>
-                        <input type="url" id="image" name="image" placeholder="https://ejemplo.com/imagen.jpg" required>
-                    </div>
-                </div>
 
                 <button type="submit" class="btn btn-primary">Publicar Anuncio</button>
             </form>
@@ -140,12 +140,76 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2023 TuZona - Todos los derechos reservados</p>
-            </div>
-        </div>
-    </footer>
+            <!-- Image uploader and publish script -->
+    <script src="js/image-uploader.js"></script>
+    <script type="module" src="js/publish.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the image uploader with Cloudinary credentials
+            const imageUploader = new ImageUploader({
+                cloudName: 'dxrbvgr1o',
+                uploadPreset: 'tuzona_uploads',
+                maxFiles: 5,
+                maxFileSize: 5, // MB
+                allowedFormats: ['jpg', 'jpeg', 'png', 'webp']
+            });
+            
+            // Set the first uploaded image as the main image
+            imageUploader.onUploadComplete = (imageUrl) => {
+                if (imageUrl && !document.getElementById('main-image').value) {
+                    document.getElementById('main-image').value = imageUrl;
+                }
+            };
 
+            // Add the uploader to the page
+            const container = document.getElementById('image-uploader-container');
+            container.appendChild(imageUploader.getElement());
+
+            // Update the form submission to include image URLs
+            const form = document.getElementById('publish-form');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get all uploaded image URLs
+                const imageUrls = imageUploader.getUploadedImages();
+                
+                if (imageUrls.length === 0) {
+                    alert('Por favor sube al menos una imagen del producto');
+                    return false;
+                }
+                
+                // Set the hidden input value with comma-separated URLs
+                document.getElementById('image-urls').value = imageUrls.join(',');
+                
+                // Set the first image as main image if not already set
+                if (!document.getElementById('main-image').value && imageUrls.length > 0) {
+                    document.getElementById('main-image').value = imageUrls[0];
+                }
+                
+                // Continue with form submission
+                if (validateForm()) {
+                    // Here you would typically submit the form data to your server
+                    console.log('Form submitted with images:', imageUrls);
+                    // form.submit(); // Uncomment this to enable actual form submission
+                }
+            });
+
+            // Basic form validation
+            function validateForm() {
+                const title = document.getElementById('title').value.trim();
+                const description = document.getElementById('description').value.trim();
+                const price = document.getElementById('price').value.trim();
+                const category = document.getElementById('category').value;
+                
+                if (!title || !description || !price || !category) {
+                    alert('Por favor completa todos los campos obligatorios');
+                    return false;
+                }
+                
+                return true;
+            }
+        });
+    </script>
     <script src="js/publish.js"></script>
 </body>
 </html>

@@ -302,20 +302,270 @@ class UserDataManager {
         `).join('');
     }
 
-    displayMyAds(filter = 'all') {
+    async displayMyAds(filter = 'all') {
         const myAdsList = document.getElementById('my-ads-list');
         if (!myAdsList) return;
         
-        const userAds = this.ads.filter(ad => ad.seller?.id === this.currentUser.id);
-        let filteredAds = [...userAds];
+        // Show loading state
+        myAdsList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Cargando anuncios...</div>';
         
-        // Apply filters
+        try {
+            // Get current user
+            const user = auth.currentUser;
+            if (!user) {
+                myAdsList.innerHTML = `
+                    <div class="no-ads">
+                        <i class="fas fa-user-lock"></i>
+                        <p>Debes iniciar sesión para ver tus anuncios.</p>
+                        <a href="login.html" class="btn btn-primary">Iniciar sesión</a>
+                    </div>`;
+                return;
+            }
+            
+            // Get user's ads from Firestore
+            const userAds = await AdService.getUserAds(user.uid);
+            
+            // Apply additional filters
+            let filteredAds = [...userAds];
+            if (filter === 'active') {
+                filteredAds = userAds.filter(ad => ad.status === 'active');
+            } else if (filter === 'sold') {
+                filteredAds = userAds.filter(ad => ad.status === 'sold');
+            } else if (filter === 'pending') {
+                filteredAds = userAds.filter(ad => ad.status === 'pending');
+            } else if (filter === 'inactive') {
+                filteredAds = userAds.filter(ad => ad.status === 'inactive');
+            }
+            
+            // If no ads found
+            if (filteredAds.length === 0) {
+                const filterText = filter !== 'all' ? ` ${filter}` : '';
+                myAdsList.innerHTML = `
+                    <div class="no-ads">
+                        <i class="fas fa-newspaper"></i>
+                        <p>No tienes anuncios${filterText} por el momento.</p>
+                        <a href="publish.html" class="btn btn-primary">Publicar un anuncio</a>
+                    </div>`;
+                return;
+            }
+            
+            // Sort by date (newest first)
+            filteredAds.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0);
+                const dateB = new Date(b.createdAt || 0);
+                return dateB - dateA;
+            });
+            
+            // Generate HTML for each ad
+            myAdsList.innerHTML = filteredAds.map(ad => `
+                <div class="ad-item" data-ad-id="${ad.id}">
+                    <div class="ad-image">
+                        <img src="${ad.images && ad.images.length > 0 ? ad.images[0] : 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMzAwIDIwMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg=='}" 
+                             alt="${ad.title || 'Anuncio sin título'}" 
+                             onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMzAwIDIwMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg=='">
+                    </div>
+                    <div class="ad-details">
+                        <h3>${ad.title || 'Anuncio sin título'}</h3>
+                        <div class="ad-meta">
+                            <span class="ad-price">${ad.price ? '$' + ad.price.toLocaleString('es-ES') : 'Precio no especificado'}</span>
+                            <span class="ad-location"><i class="fas fa-map-marker-alt"></i> ${ad.location || 'Ubicación no especificada'}</span>
+                            <span class="ad-date"><i class="far fa-calendar-alt"></i> ${new Date(ad.createdAt).toLocaleDateString()}</span>
+                            <span class="ad-status ${ad.status || 'active'}">${(ad.status || 'active').charAt(0).toUpperCase() + (ad.status || 'active').slice(1)}</span>
+                        </div>
+                        <div class="ad-actions">
+                            <a href="ad.html?id=${ad.id}" class="btn btn-sm"><i class="fas fa-eye"></i> Ver</a>
+                            <a href="publish.html?edit=${ad.id}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i> Editar</a>
+                            <button class="btn btn-sm btn-danger delete-ad" data-ad-id="${ad.id}"><i class="fas fa-trash"></i> Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add event listeners for delete buttons
+            myAdsList.querySelectorAll('.delete-ad').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const adId = e.currentTarget.dataset.adId;
+                    if (confirm('¿Estás seguro de que quieres eliminar este anuncio? Esta acción no se puede deshacer.')) {
+                        try {
+                            await AdService.deleteAd(adId);
+                            this.displayMyAds(filter); // Refresh the list
+                            this.showAlert('Anuncio eliminado correctamente', 'success');
+                        } catch (error) {
+                            console.error('Error deleting ad:', error);
+                            this.showAlert('Error al eliminar el anuncio', 'error');
+                        }
+                    }
+                });
+            });
+            
+            // Update the active tab in the UI
+            document.querySelectorAll('.ad-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-filter') === filter) {
+                    btn.classList.add('active');
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error loading ads:', error);
+            myAdsList.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Error al cargar los anuncios. Por favor, intenta de nuevo más tarde.</p>
+                    <button class="btn btn-sm" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Reintentar
+                    </button>
+                </div>`;
+        }
+            
+            // Get all ads from localStorage
+            const allAds = JSON.parse(localStorage.getItem('sampleAds') || '[]');
+            
+            // Filter ads by the current user
+            let userAds = allAds.filter(ad => ad.seller && ad.seller.id === currentUserId);
+            
+            // Apply additional filters if needed
+            if (filter === 'active') {
+                userAds = userAds.filter(ad => ad.status === 'active');
+            } else if (filter === 'sold') {
+                userAds = userAds.filter(ad => ad.status === 'sold');
+            } else if (filter === 'pending') {
+                userAds = userAds.filter(ad => ad.status === 'pending');
+            } else if (filter === 'inactive') {
+                userAds = userAds.filter(ad => ad.status === 'inactive');
+            }
+            
+            // If no ads found
+            if (userAds.length === 0) {
+                myAdsList.innerHTML = `
+                    <div class="no-ads">
+                        <i class="fas fa-newspaper"></i>
+                        <p>No tienes anuncios ${filter !== 'all' ? filter : ''} por el momento.</p>
+                        <a href="publish.html" class="btn btn-primary">Publicar un anuncio</a>
+                    </div>`;
+                return;
+            }
+            
+            // Sort by date (newest first)
+            userAds.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+            
+            // Generate HTML for each ad
+            myAdsList.innerHTML = userAds.map(ad => `
+                <div class="ad-item" data-ad-id="${ad.id}">
+                    <div class="ad-image">
+                        <img src="${ad.images && ad.images.length > 0 ? ad.images[0] : (ad.image || '')}" 
+                             alt="${ad.title}" 
+                             onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMzAwIDIwMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg=='">
+                    </div>
+                    <div class="ad-details">
+                        <h3>${ad.title || 'Sin título'}</h3>
+                        <div class="ad-meta">
+                            <span class="ad-price">${ad.price ? '$' + ad.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : 'Precio no especificado'}</span>
+                            <span class="ad-location"><i class="fas fa-map-marker-alt"></i> ${ad.location || 'Ubicación no especificada'}</span>
+                            <span class="ad-date"><i class="far fa-calendar-alt"></i> ${new Date(ad.date || ad.createdAt).toLocaleDateString()}</span>
+                            <span class="ad-status ${ad.status || 'active'}">${(ad.status || 'active').charAt(0).toUpperCase() + (ad.status || 'active').slice(1)}</span>
+                        </div>
+                        <div class="ad-actions">
+                            <a href="ad.html?id=${ad.id}" class="btn btn-sm"><i class="fas fa-eye"></i> Ver</a>
+                            <a href="publish.html?edit=${ad.id}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i> Editar</a>
+                            <button class="btn btn-sm btn-danger delete-ad" data-ad-id="${ad.id}"><i class="fas fa-trash"></i> Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add event listeners for delete buttons
+            myAdsList.querySelectorAll('.delete-ad').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const adId = e.currentTarget.dataset.adId;
+                    if (confirm('¿Estás seguro de que quieres eliminar este anuncio? Esta acción no se puede deshacer.')) {
+                        this.deleteAd(adId);
+                    }
+                });
+            });
+            
+        } catch (error) {
+            console.error('Error loading ads:', error);
+            myAdsList.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Error al cargar los anuncios. Por favor, intenta de nuevo más tarde.</p>
+                    <button class="btn btn-sm" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Reintentar
+                    </button>
+                </div>`;
+        }
+        
+        // Get the current user's ID
+        const currentUserId = this.currentUser?.uid || '';
+        if (!currentUserId) {
+            myAdsList.innerHTML = '<p class="no-ads">No estás autenticado. Por favor inicia sesión.</p>';
+            return;
+        }
+        
+        // Get all ads from localStorage
+        const allAds = JSON.parse(localStorage.getItem('sampleAds') || '[]');
+        
+        // Filter ads by the current user
+        let userAds = allAds.filter(ad => ad.seller && ad.seller.id === currentUserId);
+        
+        // Apply additional filters if needed
         if (filter === 'active') {
-            filteredAds = userAds.filter(ad => ad.status === 'active');
+            userAds = userAds.filter(ad => ad.status === 'active');
+        } else if (filter === 'sold') {
+            userAds = userAds.filter(ad => ad.status === 'sold');
         } else if (filter === 'pending') {
-            filteredAds = userAds.filter(ad => ad.status === 'pending');
-        } else if (filter === 'inactive') {
-            filteredAds = userAds.filter(ad => ad.status === 'inactive');
+            userAds = userAds.filter(ad => ad.status === 'pending');
+        }
+        
+        // If no ads found
+        if (userAds.length === 0) {
+            myAdsList.innerHTML = `
+                <div class="no-ads">
+                    <i class="fas fa-newspaper"></i>
+                    <p>No tienes anuncios ${filter !== 'all' ? filter : ''} por el momento.</p>
+                    <a href="publish.html" class="btn btn-primary">Publicar un anuncio</a>
+                </div>`;
+            return;
+        }
+        
+        // Sort by date (newest first)
+        userAds.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
+        
+        // Generate HTML for each ad
+        myAdsList.innerHTML = userAds.map(ad => `
+            <div class="ad-item" data-ad-id="${ad.id}">
+                <div class="ad-image">
+                    <img src="${ad.images && ad.images.length > 0 ? ad.images[0] : (ad.image || '')}" 
+                         alt="${ad.title}" 
+                         onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMzAwIDIwMCI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg==';">
+                </div>
+                <div class="ad-details">
+                    <h3>${ad.title}</h3>
+                    <div class="ad-meta">
+                        <span class="ad-price">${ad.price ? '$' + ad.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : 'Precio no especificado'}</span>
+                        <span class="ad-location"><i class="fas fa-map-marker-alt"></i> ${ad.location || 'Ubicación no especificada'}</span>
+                        <span class="ad-date"><i class="far fa-calendar-alt"></i> ${new Date(ad.date || ad.createdAt).toLocaleDateString()}</span>
+                        <span class="ad-status ${ad.status || 'active'}">${(ad.status || 'active').charAt(0).toUpperCase() + (ad.status || 'active').slice(1)}</span>
+                    </div>
+                    <div class="ad-actions">
+                        <a href="ad.html?id=${ad.id}" class="btn btn-sm"><i class="fas fa-eye"></i> Ver</a>
+                        <a href="publish.html?edit=${ad.id}" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i> Editar</a>
+                        <button class="btn btn-sm btn-danger delete-ad" data-ad-id="${ad.id}"><i class="fas fa-trash"></i> Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        // Add event listeners for delete buttons
+        myAdsList.querySelectorAll('.delete-ad').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const adId = e.currentTarget.dataset.adId;
+                if (confirm('¿Estás seguro de que quieres eliminar este anuncio? Esta acción no se puede deshacer.')) {
+                    this.deleteAd(adId);
+                }
+            });
+        });
         }
 
         myAdsList.innerHTML = '';

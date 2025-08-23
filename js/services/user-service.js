@@ -2,17 +2,32 @@
 // Handles user-related operations like creating, updating, and retrieving user profiles
 
 // Import Firebase services
-import { 
+const { 
     collection, doc, getDoc, setDoc, updateDoc, deleteDoc, 
     query, where, getDocs, serverTimestamp, orderBy 
-} from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
-import { 
-    getStorage, ref, uploadBytes, getDownloadURL 
-} from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js';
-import { db, auth as firebaseAuth } from '../firebase-config.js';
+} = await import('https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js');
 
-// Initialize Firebase Storage
-const storage = getStorage();
+const { 
+    getStorage, ref, uploadBytes, getDownloadURL 
+} = await import('https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js');
+
+// Import Firebase initialization
+import initializeFirebase from '../firebase-config.js';
+
+// Initialize Firebase services
+let db, firebaseAuth, storage;
+
+// Initialize when the module loads
+(async () => {
+    try {
+        const firebase = await initializeFirebase();
+        db = firebase.db;
+        firebaseAuth = firebase.auth;
+        storage = firebase.storage;
+    } catch (error) {
+        console.error('Failed to initialize Firebase in user-service:', error);
+    }
+})();
 
 /**
  * Get the current user's profile
