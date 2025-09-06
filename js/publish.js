@@ -2,6 +2,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -17,6 +18,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 document.addEventListener('DOMContentLoaded', () => {
     const publishForm = document.getElementById('publish-form');
@@ -77,11 +79,35 @@ document.addEventListener('DOMContentLoaded', () => {
             const sellerPhone = e.target['seller-phone'].value;
             const images = [];
 
-            // Get image URLs (if any)
+            // Get and upload images
             const imageInputs = document.querySelectorAll('.image-upload-preview img');
             for (const img of imageInputs) {
-                if (img.src && !img.src.includes('placeholder')) {
-                    images.push(img.src);
+                if (img.src && !img.src.includes('placeholder') && img.dataset.file) {
+                    // If it's a new file upload (not from URL)
+                    const file = JSON.parse(img.dataset.file);
+                    if (file && file.file) {
+                        // Upload to Firebase Storage
+                        const filePath = `ads/${Date.now()}_${file.name}`;
+                        const storageReference = storageRef(storage, filePath);
+                        
+                        try {
+                            // Convert base64 to blob
+                            const response = await fetch(file.url);
+                            const blob = await response.blob();
+                            
+                            // Upload the file
+                            const snapshot = await uploadBytes(storageReference, blob);
+                            const downloadURL = await getDownloadURL(snapshot.ref);
+                            images.push(downloadURL);
+                        } catch (error) {
+                            console.error('Error uploading image:', error);
+                            // If upload fails, keep the original URL as fallback
+                            if (file.url) images.push(file.url);
+                        }
+                    } else if (img.src) {
+                        // If it's already a URL (from previous uploads)
+                        images.push(img.src);
+                    }
                 }
             }
 
@@ -107,8 +133,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 updatedAt: serverTimestamp()
             };
 
+            // Add timestamp and status to ad data
+            const adWithTimestamp = {
+                ...adData,
+                status: 'active',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                views: 0
+            };
+            
             // Save ad to Firestore
-            const docRef = await addDoc(collection(db, 'ads'), adData);
+            const docRef = await addDoc(collection(db, 'ads'), adWithTimestamp);
             
             // Show success message
             showSuccess('¡Anuncio publicado exitosamente!');

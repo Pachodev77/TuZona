@@ -171,48 +171,43 @@ class ImageUploader {
         const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
         filesToProcess.forEach(file => {
-            if (this.validateFile(file)) {
-                this.previewImage(file);
-            }
+            this.handleFileUpload(file);
         });
     }
 
-    validateFile(file) {
-        const fileType = file.type.split('/')[1];
-        const isValidFormat = this.allowedFormats.includes(fileType.toLowerCase());
-        const isValidSize = file.size <= this.maxFileSize * 1024 * 1024;
-
-        if (!isValidFormat) {
-            alert(`Formato de archivo no soportado. Formatos permitidos: ${this.allowedFormats.join(', ')}`);
-            return false;
+    async handleFileUpload(file) {
+        if (this.uploadedImages.length >= this.maxFiles) {
+            this.showError(`Solo puedes subir un máximo de ${this.maxFiles} imágenes`);
+            return;
         }
 
-        if (!isValidSize) {
-            alert(`El archivo es demasiado grande. Tamaño máximo: ${this.maxFileSize}MB`);
-            return false;
+        // Validate file type
+        const fileType = file.name.split('.').pop().toLowerCase();
+        if (!this.allowedFormats.includes(fileType)) {
+            this.showError(`Formato de archivo no permitido. Usa: ${this.allowedFormats.join(', ')}`);
+            return;
         }
 
-        return true;
-    }
+        // Validate file size
+        if (file.size > this.maxFileSize * 1024 * 1024) {
+            this.showError(`El archivo es demasiado grande. Tamaño máximo: ${this.maxFileSize}MB`);
+            return;
+        }
 
-    previewImage(file) {
+        // Create preview
         const reader = new FileReader();
-        const previewGrid = this.previewContainer.querySelector('.preview-grid');
-        
         reader.onload = (e) => {
-            const previewItem = document.createElement('div');
-            previewItem.className = 'preview-item';
-            previewItem.innerHTML = `
-                <img src="${e.target.result}" alt="Preview">
-                <button class="remove-image" title="Eliminar">&times;</button>
-                <div class="upload-progress">
-                    <div class="progress-bar"></div>
-                </div>
-            `;
+            const fileData = {
+                file: file,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                url: e.target.result
+            };
             
-            previewGrid.appendChild(previewItem);
-            this.uploadedImages.push(file);
-            this.updateFileInput();
+            const preview = this.createPreviewElement(e.target.result, fileData);
+            const previewGrid = this.previewContainer.querySelector('.preview-grid');
+            previewGrid.appendChild(preview);
             
             // Auto-upload the image
             this.uploadImage(file, previewItem);
