@@ -1,24 +1,10 @@
-// Import the functions you need from the Firebase SDKs
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js';
+// Import Firebase services from the config file
+import { auth, db, storage } from './firebase-config.js';
+import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js';
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyBd-B3w6KanW3fk7vy5eAwtXO-bxXXl9eY",
-    authDomain: "tuzona-6df14.firebaseapp.com",
-    projectId: "tuzona-6df14",
-    storageBucket: "tuzona-6df14.appspot.com",
-    messagingSenderId: "826985285220",
-    appId: "1:826985285220:web:aad7f544961ecfdf2d4171"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+// Get the current user
+const user = auth.currentUser;
 
 document.addEventListener('DOMContentLoaded', () => {
     const publishForm = document.getElementById('publish-form');
@@ -79,35 +65,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const sellerPhone = e.target['seller-phone'].value;
             const images = [];
 
-            // Get and upload images
-            const imageInputs = document.querySelectorAll('.image-upload-preview img');
+            // Get image files from the uploader
+            const imageInputs = document.querySelectorAll('.preview-item img[data-file]');
             for (const img of imageInputs) {
-                if (img.src && !img.src.includes('placeholder') && img.dataset.file) {
-                    // If it's a new file upload (not from URL)
-                    const file = JSON.parse(img.dataset.file);
-                    if (file && file.file) {
-                        // Upload to Firebase Storage
-                        const filePath = `ads/${Date.now()}_${file.name}`;
-                        const storageReference = storageRef(storage, filePath);
+                try {
+                    const fileData = JSON.parse(img.dataset.file);
+                    if (fileData && fileData.file) {
+                        // Convert base64 to blob
+                        const response = await fetch(fileData.url);
+                        const blob = await response.blob();
                         
-                        try {
-                            // Convert base64 to blob
-                            const response = await fetch(file.url);
-                            const blob = await response.blob();
-                            
-                            // Upload the file
-                            const snapshot = await uploadBytes(storageReference, blob);
-                            const downloadURL = await getDownloadURL(snapshot.ref);
-                            images.push(downloadURL);
-                        } catch (error) {
-                            console.error('Error uploading image:', error);
-                            // If upload fails, keep the original URL as fallback
-                            if (file.url) images.push(file.url);
-                        }
-                    } else if (img.src) {
+                        // Upload to Firebase Storage
+                        const filePath = `ads/${Date.now()}_${fileData.name}`;
+                        const fileRef = storageRef(storage, filePath);
+                        
+                        // Upload the file
+                        const snapshot = await uploadBytes(fileRef, blob);
+                        const downloadURL = await getDownloadURL(snapshot.ref);
+                        images.push(downloadURL);
+                    } else if (img.src && !img.src.includes('data:')) {
                         // If it's already a URL (from previous uploads)
                         images.push(img.src);
                     }
+                } catch (error) {
+                    console.error('Error processing image:', error);
                 }
             }
 

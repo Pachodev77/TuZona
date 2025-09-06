@@ -108,40 +108,62 @@ const createAdCard = (ad) => {
 
 // Display ads in the DOM
 const displayAds = async () => {
+    // Get container references
+    const featuredContainer = document.getElementById('featured-ads');
+    const recentContainer = document.getElementById('recent-ads');
+    
+    // Check if at least one container exists
+    if (!featuredContainer && !recentContainer) {
+        console.warn('No ad containers found in the DOM');
+        return;
+    }
+
     try {
-        // Show loading state
-        featuredAdsContainer.innerHTML = '<div class="loading">Cargando anuncios destacados...</div>';
-        recentAdsContainer.innerHTML = '<div class="loading">Cargando anuncios recientes...</div>';
+        // Show loading states for existing containers
+        if (featuredContainer) {
+            featuredContainer.innerHTML = '<div class="loading">Cargando anuncios destacados...</div>';
+        }
+        if (recentContainer) {
+            recentContainer.innerHTML = '<div class="loading">Cargando anuncios recientes...</div>';
+        }
         
         // Fetch featured and recent ads in parallel
         const [featuredAds, recentAds] = await Promise.all([
-            getAds(true, 6),  // Get up to 6 featured ads
-            getAds(false, 12) // Get up to 12 recent ads
+            featuredContainer ? getAds(true, 6) : Promise.resolve([]),  // Only fetch if container exists
+            recentContainer ? getAds(false, 12) : Promise.resolve([])    // Only fetch if container exists
         ]);
 
-        // Display featured ads
-        if (featuredAds.length > 0) {
-            featuredAdsContainer.innerHTML = '';
-            featuredAds.forEach(ad => {
-                featuredAdsContainer.innerHTML += createAdCard(ad);
-            });
-        } else {
-            featuredAdsContainer.innerHTML = '<p class="no-ads">No hay anuncios destacados en este momento.</p>';
+        // Display featured ads if container exists
+        if (featuredContainer) {
+            if (featuredAds.length > 0) {
+                featuredContainer.innerHTML = '';
+                featuredAds.forEach(ad => {
+                    featuredContainer.innerHTML += createAdCard(ad);
+                });
+            } else {
+                featuredContainer.innerHTML = '<p class="no-ads">No hay anuncios destacados en este momento.</p>';
+            }
         }
 
-        // Display recent ads
-        if (recentAds.length > 0) {
-            recentAdsContainer.innerHTML = '';
-            recentAds.forEach(ad => {
-                recentAdsContainer.innerHTML += createAdCard(ad);
-            });
-        } else {
-            recentAdsContainer.innerHTML = '<p class="no-ads">No hay anuncios recientes.</p>';
+        // Display recent ads if container exists
+        if (recentContainer) {
+            if (recentAds.length > 0) {
+                recentContainer.innerHTML = '';
+                recentAds.forEach(ad => {
+                    recentContainer.innerHTML += createAdCard(ad);
+                });
+            } else {
+                recentContainer.innerHTML = '<p class="no-ads">No hay anuncios recientes.</p>';
+            }
         }
     } catch (error) {
         console.error('Error displaying ads:', error);
-        featuredAdsContainer.innerHTML = '<p class="error">Error al cargar los anuncios destacados. Por favor, recarga la página.</p>';
-        recentAdsContainer.innerHTML = '<p class="error">Error al cargar los anuncios recientes. Por favor, recarga la página.</p>';
+        if (featuredContainer) {
+            featuredContainer.innerHTML = '<p class="error">Error al cargar los anuncios destacados. Por favor, recarga la página.</p>';
+        }
+        if (recentContainer) {
+            recentContainer.innerHTML = '<p class="error">Error al cargar los anuncios recientes. Por favor, recarga la página.</p>';
+        }
     }
 };    
 
@@ -170,33 +192,58 @@ const filterAds = () => {
 };
 
 // Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Firebase
-    initializeApp(firebaseConfig);
+const initApp = () => {
+    // Check if we're on the homepage
+    const isHomePage = document.querySelector('.featured-ads') !== null;
     
-    // Display initial ads
-    displayAds();
-    
-    // Search button click
-    searchButton.addEventListener('click', filterAds);
-    
-    // Search input enter key
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            filterAds();
+    // Only run these if we're on the homepage
+    if (isHomePage) {
+        // Initialize Firebase
+        initializeApp(firebaseConfig);
+        
+        // Display ads after a small delay to ensure DOM is ready
+        setTimeout(() => {
+            displayAds().catch(error => {
+                console.error('Failed to load ads:', error);
+            });
+        }, 100);
+        
+        // Search functionality
+        const searchButton = document.querySelector('.search-btn');
+        const searchInput = document.querySelector('.search-bar input');
+        const regionSelect = document.getElementById('region');
+        
+        if (searchButton) {
+            searchButton.addEventListener('click', filterAds);
         }
-    });
-    
-    // Region select change - trigger search immediately when region changes
-    if (regionSelect) {
-        regionSelect.addEventListener('change', function() {
-            // Only trigger if a region is actually selected (not the default option)
-            if (this.value) {
-                filterAds();
-            }
-        });
+        
+        // Search on Enter key
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    filterAds();
+                }
+            });
+        }
+        
+        // Filter by region
+        if (regionSelect) {
+            regionSelect.addEventListener('change', () => {
+                if (regionSelect.value) {
+                    filterAds();
+                }
+            });
+        }
     }
-});
+};
+
+// Run when DOM is fully loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    // DOMContentLoaded has already fired
+    initApp();
+}
 
 // Mobile menu toggle (for smaller screens)
 const setupMobileMenu = () => {
@@ -205,8 +252,11 @@ const setupMobileMenu = () => {
     // Only proceed if the navigation exists on the page
     if (!mainNav) return;
     
-    const navList = mainNav.querySelector('ul');
-    if (!navList) return;
+    const navContainer = mainNav.querySelector('.container');
+    if (!navContainer) return;
+    
+    const navList = navContainer.querySelector('ul');
+    if (!navList) return; // Exit if no navigation list found
     
     // Check if menu toggle already exists
     let menuToggle = mainNav.querySelector('.mobile-menu-toggle');
@@ -217,14 +267,19 @@ const setupMobileMenu = () => {
         menuToggle.className = 'mobile-menu-toggle';
         menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
         
-        // Add mobile menu toggle button
-        mainNav.insertBefore(menuToggle, navList);
+        // Add mobile menu toggle button to the navigation
+        mainNav.insertBefore(menuToggle, navContainer);
         
         // Toggle menu on click
         menuToggle.addEventListener('click', () => {
             const isVisible = navList.style.display === 'flex';
             navList.style.display = isVisible ? 'none' : 'flex';
         });
+        
+        // Initial state for mobile
+        if (window.innerWidth <= 768) {
+            navList.style.display = 'none';
+        }
     }
     
     // Handle window resize

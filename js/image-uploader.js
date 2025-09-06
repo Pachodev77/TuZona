@@ -1,9 +1,5 @@
 class ImageUploader {
     constructor(options = {}) {
-        this.cloudName = options.cloudName || 'dxrbvgr1o';
-        this.apiKey = options.apiKey || '779192924525255';
-        this.apiSecret = options.apiSecret || 'A_0vO7809rgqLHw5xQC1eV4hqLI';
-        this.uploadPreset = options.uploadPreset || 'tuzona_uploads';
         this.maxFiles = options.maxFiles || 5;
         this.maxFileSize = options.maxFileSize || 5; // in MB
         this.allowedFormats = options.allowedFormats || ['jpg', 'jpeg', 'png', 'webp'];
@@ -32,89 +28,6 @@ class ImageUploader {
                 <div class="preview-grid"></div>
             </div>
         `;
-
-        // Add styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .image-preview-container {
-                margin: 20px 0;
-            }
-            .upload-area {
-                border: 2px dashed #ccc;
-                border-radius: 8px;
-                padding: 30px;
-                text-align: center;
-                transition: all 0.3s ease;
-                background: #f9f9f9;
-            }
-            .upload-area.drag-over {
-                border-color: #4CAF50;
-                background: #f0f8f0;
-            }
-            .upload-label {
-                cursor: pointer;
-                display: block;
-                padding: 20px;
-            }
-            .upload-label i {
-                font-size: 48px;
-                color: #4CAF50;
-                margin-bottom: 15px;
-            }
-            .preview-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 15px;
-                margin-top: 20px;
-            }
-            .preview-item {
-                position: relative;
-                border-radius: 8px;
-                overflow: hidden;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                aspect-ratio: 1;
-            }
-            .preview-item img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-            .remove-image {
-                position: absolute;
-                top: 5px;
-                right: 5px;
-                background: rgba(255,0,0,0.7);
-                color: white;
-                border: none;
-                border-radius: 50%;
-                width: 25px;
-                height: 25px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                opacity: 0;
-                transition: opacity 0.3s;
-            }
-            .preview-item:hover .remove-image {
-                opacity: 1;
-            }
-            .upload-progress {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 4px;
-                background: rgba(0,0,0,0.1);
-            }
-            .progress-bar {
-                height: 100%;
-                background: #4CAF50;
-                width: 0%;
-                transition: width 0.3s;
-            }
-        `;
-        document.head.appendChild(style);
     }
 
     setupEventListeners() {
@@ -127,7 +40,10 @@ class ImageUploader {
 
         // Drag and drop events
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, this.preventDefaults, false);
+            uploadArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
         });
 
         ['dragenter', 'dragover'].forEach(eventName => {
@@ -148,22 +64,14 @@ class ImageUploader {
         });
 
         // Handle image removal
-        previewGrid.addEventListener('click', (e) => {
-            if (e.target.closest('.remove-image')) {
-                const item = e.target.closest('.preview-item');
-                const index = Array.from(previewGrid.children).indexOf(item);
-                if (index > -1) {
-                    this.uploadedImages.splice(index, 1);
-                    item.remove();
-                    this.updateFileInput();
+        if (previewGrid) {
+            previewGrid.addEventListener('click', (e) => {
+                if (e.target.closest('.remove-image')) {
+                    const previewItem = e.target.closest('.preview-item');
+                    this.removeImage(previewItem);
                 }
-            }
-        });
-    }
-
-    preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
+            });
+        }
     }
 
     handleFiles(files) {
@@ -176,11 +84,6 @@ class ImageUploader {
     }
 
     async handleFileUpload(file) {
-        if (this.uploadedImages.length >= this.maxFiles) {
-            this.showError(`Solo puedes subir un máximo de ${this.maxFiles} imágenes`);
-            return;
-        }
-
         // Validate file type
         const fileType = file.name.split('.').pop().toLowerCase();
         if (!this.allowedFormats.includes(fileType)) {
@@ -196,112 +99,190 @@ class ImageUploader {
 
         // Create preview
         const reader = new FileReader();
-        reader.onload = (e) => {
-            const fileData = {
-                file: file,
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                url: e.target.result
-            };
-            
-            const preview = this.createPreviewElement(e.target.result, fileData);
-            const previewGrid = this.previewContainer.querySelector('.preview-grid');
-            previewGrid.appendChild(preview);
-            
-            // Auto-upload the image
-            this.uploadImage(file, previewItem);
+        
+        reader.onload = async (e) => {
+            try {
+                // First create a preview with the local file URL
+                const fileData = {
+                    file: file,
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    url: e.target.result
+                };
+
+                const preview = this.createPreviewElement(e.target.result, fileData);
+                const previewGrid = this.previewContainer.querySelector('.preview-grid');
+                if (previewGrid) {
+                    previewGrid.appendChild(preview);
+                }
+
+                // Upload to Cloudinary
+                const cloudinaryUrl = await this.uploadToCloudinary(file);
+                
+                // Update the preview with the Cloudinary URL
+                const img = preview.querySelector('img');
+                if (img) {
+                    img.src = cloudinaryUrl;
+                    img.dataset.file = JSON.stringify({
+                        name: file.name,
+                        url: cloudinaryUrl
+                    });
+                }
+
+                // Add to uploaded images array
+                this.uploadedImages.push({
+                    file: {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        url: cloudinaryUrl
+                    },
+                    previewElement: preview
+                });
+
+                // Update UI
+                this.updateUploadArea();
+
+                // Call onUploadComplete if this is the first image
+                if (this.uploadedImages.length === 1 && this.onUploadComplete) {
+                    this.onUploadComplete(cloudinaryUrl);
+                }
+                
+            } catch (error) {
+                console.error('Error handling file upload:', error);
+                this.showError('Error al procesar la imagen. Por favor, inténtalo de nuevo.');
+                // Remove the preview if it was added
+                const preview = this.previewContainer.querySelector('.preview-item:last-child');
+                if (preview) {
+                    preview.remove();
+                }
+            }
+        };
+        
+        reader.onerror = (error) => {
+            console.error('Error reading file:', error);
+            this.showError('Error al leer el archivo. Intenta con otra imagen.');
         };
         
         reader.readAsDataURL(file);
     }
 
-    async uploadImage(file, previewItem) {
-        const progressBar = previewItem.querySelector('.progress-bar');
+    async uploadToCloudinary(file) {
+        // Get configuration from cloudinaryConfig
+        const { cloudName, uploadPreset, folder } = window.cloudinaryConfig || {};
+        
+        if (!cloudName || !uploadPreset) {
+            console.error('Cloudinary configuration is missing');
+            throw new Error('Error de configuración de Cloudinary');
+        }
+        
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', this.uploadPreset);
+        formData.append('upload_preset', uploadPreset);
         
-        // For unsigned uploads, we don't need to provide api_key or signature
-        // Cloudinary will use the upload_preset for authentication
+        // Add folder if specified
+        if (folder) {
+            formData.append('folder', folder);
+        }
         
         try {
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('Cloudinary upload response:', data);
-            
-            if (data.secure_url) {
-                // Store the Cloudinary URL in the preview item
-                const secureUrl = data.secure_url.replace(/^http:/, 'https:'); // Ensure HTTPS
-                previewItem.dataset.url = secureUrl;
-                progressBar.style.width = '100%';
-                progressBar.style.backgroundColor = '#4CAF50';
-                
-                // Call the upload complete callback if provided
-                if (this.onUploadComplete && typeof this.onUploadComplete === 'function') {
-                    this.onUploadComplete(secureUrl);
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+                {
+                    method: 'POST',
+                    body: formData
                 }
-                return secureUrl;
-            } else {
-                console.error('No secure_url in response:', data);
-                throw new Error('No se pudo obtener la URL de la imagen subida');
+            );
+            
+            if (!response.ok) {
+                throw new Error('Upload failed');
             }
+            
+            const data = await response.json();
+            return data.secure_url;
+            
         } catch (error) {
-            console.error('Error uploading image:', error);
-            progressBar.style.backgroundColor = '#f44336';
-            alert('Error al subir la imagen. Por favor, inténtalo de nuevo.');
+            console.error('Error uploading to Cloudinary:', error);
+            throw error;
         }
     }
 
-    updateFileInput() {
-        const remainingSlots = this.maxFiles - this.uploadedImages.length;
-        const uploadLabel = this.previewContainer.querySelector('.upload-label');
+    createPreviewElement(imageUrl, fileData) {
+        const preview = document.createElement('div');
+        preview.className = 'preview-item';
+        preview.innerHTML = `
+            <img src="${imageUrl}" alt="${fileData.name}" data-file='${JSON.stringify(fileData).replace(/'/g, "'")}'>
+            <button type="button" class="remove-image" title="Eliminar imagen">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        return preview;
+    }
+
+    removeImage(previewItem) {
+        if (!previewItem) return;
         
-        if (remainingSlots <= 0) {
+        // Remove from DOM
+        previewItem.remove();
+        
+        // Remove from uploaded images array
+        this.uploadedImages = this.uploadedImages.filter(
+            img => img.previewElement !== previewItem
+        );
+        
+        // Reset file input if no images left
+        if (this.uploadedImages.length === 0) {
+            const fileInput = this.previewContainer.querySelector('#image-upload');
+            if (fileInput) fileInput.value = '';
+        }
+        
+        this.updateUploadArea();
+    }
+
+    updateUploadArea() {
+        const uploadLabel = this.previewContainer.querySelector('.upload-label');
+        if (!uploadLabel) return;
+        
+        const remaining = this.maxFiles - this.uploadedImages.length;
+        if (remaining <= 0) {
             uploadLabel.style.display = 'none';
         } else {
             uploadLabel.style.display = 'block';
         }
     }
 
-    getUploadedImages() {
-        if (!this.previewContainer) return [];
-        const previewItems = this.previewContainer.querySelectorAll('.preview-item');
-        return Array.from(previewItems)
-            .map(item => item.dataset.url)
-            .filter(url => url && url.trim() !== '');
+    showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        this.previewContainer.appendChild(errorDiv);
+        
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
     }
-
-    // No need for generateSignature method with unsigned uploads using upload_preset
 
     getElement() {
         return this.previewContainer;
     }
-    
-    // Clear all uploaded images
+
+    getUploadedImages() {
+        return this.uploadedImages.map(img => ({
+            file: img.file,
+            url: img.url
+        }));
+    }
+
     clear() {
-        if (this.previewContainer) {
-            const previewGrid = this.previewContainer.querySelector('.preview-grid');
-            if (previewGrid) {
-                previewGrid.innerHTML = '';
-            }
-        }
         this.uploadedImages = [];
-        this.updateFileInput();
+        const previewGrid = this.previewContainer.querySelector('.preview-grid');
+        if (previewGrid) {
+            previewGrid.innerHTML = '';
+        }
+        this.updateUploadArea();
     }
 }
 
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ImageUploader;
-} else {
-    window.ImageUploader = ImageUploader;
-}
+// Make it available globally
+window.ImageUploader = ImageUploader;

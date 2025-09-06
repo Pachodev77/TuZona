@@ -183,76 +183,104 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <!-- Image uploader and publish script -->
+            <!-- Footer content will be loaded here -->
+        </div>
+    </footer>
+
+    <!-- Load Scripts -->
+    <script src="js/cloudinary-config.js"></script>
     <script src="js/image-uploader.js"></script>
+    <script type="module" src="js/app.js"></script>
     <script type="module" src="js/publish.js"></script>
+    
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize the image uploader with Cloudinary credentials
+        // Initialize image uploader
+        document.addEventListener('DOMContentLoaded', () => {
             const imageUploader = new ImageUploader({
-                cloudName: 'dxrbvgr1o',
-                uploadPreset: 'tuzona_uploads',
                 maxFiles: 5,
-                maxFileSize: 5, // MB
-                allowedFormats: ['jpg', 'jpeg', 'png', 'webp']
-            });
-            
-            // Set the first uploaded image as the main image
-            imageUploader.onUploadComplete = (imageUrl) => {
-                if (imageUrl && !document.getElementById('main-image').value) {
-                    document.getElementById('main-image').value = imageUrl;
+                maxFileSize: 5, // in MB
+                allowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
+                onUploadComplete: (imageUrl) => {
+                    // Set the first uploaded image as the main image
+                    const mainImage = document.getElementById('main-image');
+                    if (mainImage) {
+                        mainImage.src = imageUrl;
+                    }
                 }
-            };
+            });
 
             // Add the uploader to the page
             const container = document.getElementById('image-uploader-container');
-            container.appendChild(imageUploader.getElement());
-
-            // Update the form submission to include image URLs
-            const form = document.getElementById('publish-form');
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
+            if (container) {
+                container.appendChild(imageUploader.getElement());
                 
-                // Get all uploaded image URLs
-                const imageUrls = imageUploader.getUploadedImages();
-                
-                if (imageUrls.length === 0) {
-                    alert('Por favor sube al menos una imagen del producto');
-                    return false;
-                }
-                
-                // Set the hidden input value with comma-separated URLs
-                document.getElementById('image-urls').value = imageUrls.join(',');
-                
-                // Set the first image as main image if not already set
-                if (!document.getElementById('main-image').value && imageUrls.length > 0) {
-                    document.getElementById('main-image').value = imageUrls[0];
-                }
-                
-                // Continue with form submission
-                if (validateForm()) {
-                    // Here you would typically submit the form data to your server
-                    console.log('Form submitted with images:', imageUrls);
-                    // form.submit(); // Uncomment this to enable actual form submission
-                }
-            });
-
-            // Basic form validation
-            function validateForm() {
-                const title = document.getElementById('title').value.trim();
-                const description = document.getElementById('description').value.trim();
-                const price = document.getElementById('price').value.trim();
-                const category = document.getElementById('category').value;
-                
-                if (!title || !description || !price || !category) {
-                    alert('Por favor completa todos los campos obligatorios');
-                    return false;
-                }
-                
-                return true;
+                // Add some basic styles
+                const style = document.createElement('style');
+                style.textContent = `
+                    .image-preview-container {
+                        margin: 20px 0;
+                    }
+                    .upload-area {
+                        border: 2px dashed #ccc;
+                        border-radius: 8px;
+                        padding: 20px;
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }
+                    .upload-area.drag-over {
+                        border-color: #4CAF50;
+                        background: #f0f8f0;
+                    }
+                    .preview-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                        gap: 15px;
+                        margin-top: 15px;
+                    }
+                    .preview-item {
+                        position: relative;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                        aspect-ratio: 1;
+                    }
+                    .preview-item img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                    .remove-image {
+                        position: absolute;
+                        top: 5px;
+                        right: 5px;
+                        background: rgba(255,0,0,0.7);
+                        color: white;
+                        border: none;
+                        border-radius: 50%;
+                        width: 25px;
+                        height: 25px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        opacity: 0;
+                        transition: opacity 0.3s;
+                    }
+                    .preview-item:hover .remove-image {
+                        opacity: 1;
+                    }
+                    .error-message {
+                        color: #d32f2f;
+                        background: #ffebee;
+                        padding: 10px;
+                        border-radius: 4px;
+                        margin-top: 10px;
+                        text-align: center;
+                    }
+                `;
+                document.head.appendChild(style);
             }
         });
     </script>
-    <script src="js/publish.js"></script>
 </body>
 </html>
