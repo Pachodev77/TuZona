@@ -65,23 +65,52 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    const displaySearchResults = () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const query = urlParams.get('query')?.toLowerCase() || '';
-        const region = urlParams.get('region')?.toLowerCase() || '';
+    // Initialize search with URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = urlParams.get('query') || '';
+    const regionQuery = urlParams.get('region') || '';
+    
+    searchInput.value = searchQuery;
+    if (regionSelect && regionQuery) {
+        regionSelect.value = regionQuery;
+    }
 
+    const displaySearchResults = (query = '', region = '') => {
         const ads = getAds();
-
+        
+        // Filter ads based on search query and region
         const filteredAds = ads.filter(ad => {
-            const titleMatch = ad.title.toLowerCase().includes(query);
-            const descriptionMatch = ad.description.toLowerCase().includes(query);
-            const categoryMatch = ad.category.toLowerCase().includes(query);
-            const regionMatch = region ? ad.location.toLowerCase().includes(region) : true;
-
-            return (titleMatch || descriptionMatch || categoryMatch) && regionMatch;
+            // If there's a query, check if it matches title, description, or category
+            const matchesQuery = !query || 
+                ad.title.toLowerCase().includes(query.toLowerCase()) || 
+                (ad.description && ad.description.toLowerCase().includes(query.toLowerCase())) ||
+                (ad.category && ad.category.toLowerCase().includes(query.toLowerCase()));
+            
+            // If a region is selected, check if it matches the ad's location
+            let matchesRegion = true;
+            if (region) {
+                // Convert both to lowercase for case-insensitive comparison
+                const location = ad.location ? ad.location.toLowerCase() : '';
+                const regionLower = region.toLowerCase();
+                
+                // Check if the location includes the region or vice versa
+                matchesRegion = location.includes(regionLower) || 
+                              regionLower.includes(location.split(',')[0].toLowerCase());
+            }
+                
+            return matchesQuery && matchesRegion;
         });
 
-        searchTitle.textContent = `Resultados para "${query}" ${region ? 'en ' + region : ''}`;
+        // Update the search results title
+        if (query && region) {
+            searchTitle.textContent = `Resultados para "${query}" en ${region}`;
+        } else if (query) {
+            searchTitle.textContent = `Resultados para "${query}"`;
+        } else if (region) {
+            searchTitle.textContent = `Anuncios en ${region}`;
+        } else {
+            searchTitle.textContent = 'Todos los anuncios';
+        }
 
         searchAdsContainer.innerHTML = '';
         if (filteredAds.length > 0) {
@@ -94,9 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const performSearch = () => {
-        const query = searchInput.value;
-        const region = regionSelect.value;
-        window.location.href = `search.html?query=${query}&region=${region}`;
+        const query = searchInput.value.trim().toLowerCase();
+        const region = regionSelect ? regionSelect.value : '';
+        displaySearchResults(query, region);
     };
 
     searchButton.addEventListener('click', performSearch);
@@ -106,5 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    displaySearchResults();
+    // Display initial results if there's a search query or region filter
+    if (searchQuery || regionQuery) {
+        displaySearchResults(searchQuery, regionQuery);
+    }
 });

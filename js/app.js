@@ -193,7 +193,17 @@ const displayAds = () => {
 const filterAds = () => {
     const query = searchInput.value;
     const region = regionSelect.value;
-    window.location.href = `search.html?query=${query}&region=${region}`;
+    
+    if (region) {
+        // If a region is selected, show all ads from that region
+        window.location.href = `search.html?region=${region}`;
+    } else if (query) {
+        // If only search query is provided, perform a regular search
+        window.location.href = `search.html?query=${query}`;
+    } else {
+        // If nothing is selected, show all ads
+        window.location.href = 'search.html';
+    }
 };
 
 // Event Listeners
@@ -204,15 +214,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Search button click
     searchButton.addEventListener('click', filterAds);
     
-    // Search on Enter key
+    // Search input enter key
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             filterAds();
         }
     });
     
-    // Region change
-    regionSelect.addEventListener('change', filterAds);
+    // Region select change - trigger search immediately when region changes
+    if (regionSelect) {
+        regionSelect.addEventListener('change', function() {
+            // Only trigger if a region is actually selected (not the default option)
+            if (this.value) {
+                filterAds();
+            }
+        });
+    }
 });
 
 // Mobile menu toggle (for smaller screens)
