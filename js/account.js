@@ -287,25 +287,42 @@ class UserDataManager {
     }
     
     updateAdCounters() {
+        console.log('Updating ad counters...');
+        
         if (!this.ads || !Array.isArray(this.ads)) {
             console.error('No ads array available');
             return;
         }
         
+        // Calculate the counts
         const totalAds = this.ads.length;
         const activeAds = this.ads.filter(ad => ad.status === 'active').length;
         const pendingAds = this.ads.filter(ad => ad.status === 'pending').length;
         
-        // Update the UI elements
+        console.log(`Counts - Total: ${totalAds}, Active: ${activeAds}, Pending: ${pendingAds}`);
+        
+        // Get the DOM elements
         const totalElement = document.getElementById('total-ads');
         const activeElement = document.getElementById('active-ads');
         const pendingElement = document.getElementById('pending-ads');
         
-        if (totalElement) totalElement.textContent = totalAds;
-        if (activeElement) activeElement.textContent = activeAds;
-        if (pendingElement) pendingElement.textContent = pendingAds;
+        console.log('DOM Elements:', { totalElement, activeElement, pendingElement });
         
-        console.log('Updated ad counters:', { total: totalAds, active: activeAds, pending: pendingAds });
+        // Update the DOM if elements exist
+        if (totalElement) {
+            totalElement.textContent = totalAds;
+            console.log('Updated total ads:', totalAds);
+        }
+        
+        if (activeElement) {
+            activeElement.textContent = activeAds;
+            console.log('Updated active ads:', activeAds);
+        }
+        
+        if (pendingElement) {
+            pendingElement.textContent = pendingAds;
+            console.log('Updated pending ads:', pendingAds);
+        }
     }
     
     displayUserData() {
