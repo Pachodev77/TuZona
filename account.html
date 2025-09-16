@@ -67,16 +67,33 @@
         async function loadUserData(userId) {
             try {
                 const user = auth.currentUser;
-                if (!user) return;
+                if (!user) {
+                    console.log('No user is signed in');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Get the auth token to verify the user is authenticated
+                const idToken = await user.getIdToken();
+                if (!idToken) {
+                    console.error('No ID token available');
+                    window.location.href = 'login.html';
+                    return;
+                }
                 
                 const userRef = doc(db, 'users', userId);
                 const userDoc = await getDoc(userRef);
                 
                 if (userDoc.exists()) {
                     // User document exists, update the last login time
-                    await updateDoc(userRef, {
-                        lastLogin: new Date().toISOString()
-                    });
+                    try {
+                        await updateDoc(userRef, {
+                            lastLogin: new Date().toISOString()
+                        });
+                    } catch (updateError) {
+                        console.warn('Could not update last login time:', updateError);
+                        // Continue even if we can't update the last login time
+                    }
                     // Update UI with the data
                     updateUI(userDoc.data());
                 } else {
@@ -85,26 +102,41 @@
                         uid: user.uid,
                         email: user.email || '',
                         displayName: user.displayName || user.email.split('@')[0],
-                        photoURL: user.photoURL || '',
+                        photoURL: user.photoURL || 'images/avatar-placeholder.png',
                         phoneNumber: user.phoneNumber || '',
                         createdAt: new Date().toISOString(),
                         lastLogin: new Date().toISOString()
                     };
                     
-                    // Create the user document in Firestore
-                    await setDoc(userRef, userData);
-                    
-                    // Update UI with the new user data
-                    updateUI(userData);
+                    try {
+                        // Create the user document in Firestore
+                        await setDoc(userRef, userData);
+                        // Update UI with the new user data
+                        updateUI(userData);
+                    } catch (createError) {
+                        console.error('Error creating user document:', createError);
+                        // Still update UI with basic info even if we can't save to Firestore
+                        updateUI(userData);
+                    }
                 }
             } catch (error) {
                 console.error("Error loading user data: ", error);
-                // Even if there's an error, try to show basic user info from auth
+                // Show error message to user
+                const alertContainer = document.querySelector('.alerts-container');
+                if (alertContainer) {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-danger">
+                            Error al cargar los datos del usuario. Por favor, recarga la página.
+                        </div>
+                    `;
+                }
+                
+                // Still try to show basic user info from auth if available
                 if (auth.currentUser) {
                     updateUI({
                         email: auth.currentUser.email || '',
-                        displayName: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
-                        photoURL: auth.currentUser.photoURL || ''
+                        displayName: auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || 'Usuario',
+                        photoURL: auth.currentUser.photoURL || 'images/avatar-placeholder.png'
                     });
                 }
             }
@@ -308,6 +340,162 @@
             });
         });
     </script>
+    
+    <!-- Script para manejar la carga de anuncios -->
+    <script type="module">
+        import { AdService } from './js/services/ad-service.js';
+        import { auth } from './js/firebase-config.js';
+        
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', () => {
+            // Referencias a los elementos del DOM
+            const myAdsList = document.getElementById('my-ads-list');
+            const adsLoading = document.getElementById('ads-loading');
+            const noAdsMessage = document.getElementById('no-ads-message');
+            const filterButtons = document.querySelectorAll('.ad-filters .btn');
+            let currentFilter = 'all';
+            
+            // Función para cargar los anuncios
+            async function loadAds(filter = 'all') {
+                try {
+                    // Mostrar estado de carga
+                    myAdsList.innerHTML = '';
+                    adsLoading.classList.remove('d-none');
+                    noAdsMessage.classList.add('d-none');
+                    
+                    // Obtener el usuario actual
+                    const user = auth.currentUser;
+                    if (!user) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    
+                    // Obtener los anuncios del usuario
+                    const ads = await AdService.getUserAds(user.uid);
+                    
+                    // Aplicar filtro
+                    let filteredAds = [...ads];
+                    if (filter !== 'all') {
+                        filteredAds = ads.filter(ad => ad.status === filter);
+                    }
+                    
+                    // Ocultar estado de carga
+                    adsLoading.classList.add('d-none');
+                    
+                    // Mostrar mensaje si no hay anuncios
+                    if (filteredAds.length === 0) {
+                        noAdsMessage.classList.remove('d-none');
+                        return;
+                    }
+                    
+                    // Ordenar por fecha (más recientes primero)
+                    filteredAds.sort((a, b) => {
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    });
+                    
+                    // Generar el HTML de los anuncios
+                    filteredAds.forEach(ad => {
+                        const adElement = document.createElement('div');
+                        adElement.className = 'ad-item mb-3 p-3 border rounded';
+                        adElement.innerHTML = `
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <img src="${ad.images && ad.images.length > 0 ? ad.images[0] : 'images/placeholder.jpg'}" 
+                                         alt="${ad.title || 'Anuncio sin título'}" 
+                                         class="img-fluid rounded"
+                                         onerror="this.onerror=null; this.src='images/placeholder.jpg'">
+                                </div>
+                                <div class="col-md-7">
+                                    <h4>${ad.title || 'Anuncio sin título'}</h4>
+                                    <p>${ad.description || 'Sin descripción'}</p>
+                                    <div class="d-flex gap-2 mb-2">
+                                        <span class="badge bg-primary">${ad.category || 'Sin categoría'}</span>
+                                        <span class="badge bg-${ad.status === 'active' ? 'success' : 'secondary'}">
+                                            ${ad.status === 'active' ? 'Activo' : 
+                                              ad.status === 'pending' ? 'Pendiente' : 
+                                              ad.status === 'sold' ? 'Vendido' : 'Inactivo'}
+                                        </span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="far fa-calendar-alt me-1"></i> Publicado el ${new Date(ad.createdAt).toLocaleDateString()}
+                                    </div>
+                                </div>
+                                <div class="col-md-2 d-flex flex-column justify-content-between">
+                                    <div class="text-end">
+                                        <span class="h4 text-primary">$${ad.price ? ad.price.toLocaleString('es-ES') : '0'}</span>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <a href="ad.html?id=${ad.id}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                        <a href="publish.html?edit=${ad.id}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                                        <button class="btn btn-sm btn-outline-danger delete-ad" data-ad-id="${ad.id}">Eliminar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        myAdsList.appendChild(adElement);
+                    });
+                    
+                    // Agregar manejadores de eventos para los botones de eliminar
+                    document.querySelectorAll('.delete-ad').forEach(button => {
+                        button.addEventListener('click', async (e) => {
+                            const adId = e.currentTarget.dataset.adId;
+                            if (confirm('¿Estás seguro de que quieres eliminar este anuncio?')) {
+                                try {
+                                    await AdService.deleteAd(adId);
+                                    // Recargar los anuncios después de eliminar
+                                    loadAds(currentFilter);
+                                } catch (error) {
+                                    console.error('Error al eliminar el anuncio:', error);
+                                    alert('No se pudo eliminar el anuncio. Por favor, inténtalo de nuevo.');
+                                }
+                            }
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.error('Error al cargar los anuncios:', error);
+                    adsLoading.classList.add('d-none');
+                    myAdsList.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            No se pudieron cargar los anuncios. Por favor, inténtalo de nuevo más tarde.
+                        </div>
+                    `;
+                }
+            }
+            
+            // Manejar clics en los botones de filtro
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Actualizar estado activo de los botones
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Cargar anuncios con el filtro seleccionado
+                    currentFilter = button.dataset.filter;
+                    loadAds(currentFilter);
+                });
+            });
+            
+            // Cargar anuncios cuando se muestre la sección
+            const adsSection = document.getElementById('ads');
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    loadAds(currentFilter);
+                    observer.unobserve(adsSection); // Dejar de observar después de la primera carga
+                }
+            }, { threshold: 0.1 });
+            
+            observer.observe(adsSection);
+            
+            // También cargar anuncios si ya estamos en la sección al cargar la página
+            if (window.location.hash === '#ads') {
+                loadAds(currentFilter);
+            }
+        });
+    </script>
+    
     <style>
         /* Header and Footer Fixes */
         .header {
@@ -732,7 +920,7 @@
                     <div class="profile-avatar-container">
                         <div class="avatar-upload-wrapper">
                             <div class="avatar">
-                                <img id="avatar-preview" src="https://via.placeholder.com/150" alt="User Avatar" class="user-avatar">
+                                <img id="avatar-preview" src="images/avatar-placeholder.png" alt="User Avatar" class="user-avatar" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2QxZDFkMSIgZD0iTTEyLDEzQzkuMzMsMTMgNCwxNC4zMyA0LDE3VjIwSDIwVjE3QzIwLDE0LjMzIDE0LjY3LDEzIDEyLDEzTTEyLDNBNCw0IDAgMCwwIDgsN0M4LDkuMjEgOS43OSwxMSAxMiwxMVMxNiw5LjIxIDE2LDdDMTYsNC43OSAxNC4yMSwzIDEyLDNNNSLz48L3N2Zz4='"
                                 <div class="avatar-upload-overlay">
                                     <i class="fas fa-camera"></i>
                                     <span>Cambiar foto</span>
@@ -789,21 +977,31 @@
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon">
-                                <i class="fas fa-tag"></i>
+                                <i class="fas fa-tags"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>Anuncios Activos</h3>
-                                <p class="stat-number">0</p>
+                                <h3>Total Anuncios</h3>
+                                <p id="total-ads" class="stat-number">0</p>
                             </div>
                         </div>
                         
                         <div class="stat-card">
                             <div class="stat-icon">
-                                <i class="fas fa-eye"></i>
+                                <i class="fas fa-check-circle"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>Visitas Totales</h3>
-                                <p class="stat-number">0</p>
+                                <h3>Anuncios Activos</h3>
+                                <p id="active-ads" class="stat-number">0</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Pendientes</h3>
+                                <p id="pending-ads" class="stat-number">0</p>
                             </div>
                         </div>
                         
@@ -886,7 +1084,38 @@
                         <h2>Mis Anuncios</h2>
                         <a href="publish.html" class="btn"><i class="fas fa-plus"></i> Nuevo Anuncio</a>
                     </div>
-                    <p>No tienes anuncios publicados aún.</p>
+                    
+                    <!-- Filtros de anuncios -->
+                    <div class="ad-filters mb-4">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" data-filter="all">Todos</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="active">Activos</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="pending">Pendientes</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="sold">Vendidos</button>
+                            <button type="button" class="btn btn-outline-primary" data-filter="inactive">Inactivos</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenedor de anuncios -->
+                    <div id="my-ads-list" class="ads-container">
+                        <!-- Los anuncios se cargarán aquí dinámicamente -->
+                    </div>
+                    
+                    <!-- Estado de carga -->
+                    <div id="ads-loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando tus anuncios...</p>
+                    </div>
+                    
+                    <!-- Estado vacío (se muestra cuando no hay anuncios) -->
+                    <div id="no-ads-message" class="text-center py-5 d-none">
+                        <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                        <h4>No tienes anuncios publicados</h4>
+                        <p class="text-muted">¡Crea tu primer anuncio para comenzar a vender!</p>
+                        <a href="publish.html" class="btn btn-primary mt-2"><i class="fas fa-plus"></i> Crear Anuncio</a>
+                    </div>
                 </section>
                 
                 <section id="favorites" class="dashboard-section">
@@ -1090,26 +1319,19 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/main.js"></script>
+    
+    <!-- Debug Script -->
     <script>
-        // Tab navigation
-        document.querySelectorAll('.account-nav a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Remove active class from all links and sections
-                document.querySelectorAll('.account-nav a').forEach(l => l.classList.remove('active'));
-                document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
-                
-                // Add active class to clicked link
-                this.classList.add('active');
-                
-                // Show corresponding section
-                const targetId = this.getAttribute('href').substring(1);
-                document.getElementById(targetId).classList.add('active');
-            });
-        });
-        
-        // Settings tab navigation
+        console.log('Debug: Scripts section reached in HTML');
+        console.log('Current path:', window.location.pathname);
+    </script>
+    
+    <!-- Account Scripts -->
+    <script type="module" src="/js/account.js"></script>
+    
+    <!-- Settings tab navigation
         document.querySelectorAll('.settings-menu a').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1147,6 +1369,22 @@
                 }
             });
         });
+    </script>
+    <!-- Direct script inclusion for debugging -->
+    <script>
+        console.log('=== DIRECT SCRIPT LOADED ===');
+        console.log('Document ready state:', document.readyState);
+        
+        // Try to manually import the account module
+        import('/js/account.js')
+            .then(module => {
+                console.log('Account module loaded successfully');
+                // Initialize the user data manager
+                window.userDataManager = new module.default();
+            })
+            .catch(error => {
+                console.error('Failed to load account module:', error);
+            });
     </script>
 </body>
 </html>
