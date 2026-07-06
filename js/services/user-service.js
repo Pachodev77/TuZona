@@ -2,32 +2,11 @@
 // Handles user-related operations like creating, updating, and retrieving user profiles
 
 // Import Firebase services
-const { 
+import { db, auth as firebaseAuth } from '../firebase-config.js';
+import { 
     collection, doc, getDoc, setDoc, updateDoc, deleteDoc, 
     query, where, getDocs, serverTimestamp, orderBy 
-} = await import('https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js');
-
-const { 
-    getStorage, ref, uploadBytes, getDownloadURL 
-} = await import('https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js');
-
-// Import Firebase initialization
-import initializeFirebase from '../firebase-config.js';
-
-// Initialize Firebase services
-let db, firebaseAuth, storage;
-
-// Initialize when the module loads
-(async () => {
-    try {
-        const firebase = await initializeFirebase();
-        db = firebase.db;
-        firebaseAuth = firebase.auth;
-        storage = firebase.storage;
-    } catch (error) {
-        console.error('Failed to initialize Firebase in user-service:', error);
-    }
-})();
+} from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
 
 /**
  * Get the current user's profile
@@ -149,7 +128,7 @@ export const updateUserProfile = async (userId, updates) => {
 };
 
 /**
- * Upload a user's avatar
+ * Upload a user's avatar to Cloudinary
  * @param {File} file - The image file to upload
  * @param {string} userId - The user's ID
  * @returns {Promise<Object>} Object with success status and the download URL
@@ -160,15 +139,27 @@ export const uploadUserAvatar = async (file, userId) => {
     }
 
     try {
-        const fileExt = file.name.split('.').pop();
-        const filePath = `users/${userId}/avatar.${fileExt}`;
-        const storageRef = ref(storage, filePath);
+        // Upload to Cloudinary instead of Firebase to avoid CORS issues
+        const cloudName = 'dxrbvgr1o';
+        const uploadPreset = 'tuzona_uploads';
+        const folder = 'tuzona-avatars';
         
-        // Upload the file
-        await uploadBytes(storageRef, file);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+        formData.append('folder', folder);
         
-        // Get the download URL
-        const downloadURL = await getDownloadURL(storageRef);
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Cloudinary upload failed');
+        }
+        
+        const data = await response.json();
+        const downloadURL = data.secure_url;
         
         // Update user profile with the new avatar URL
         await updateUserProfile(userId, { photoURL: downloadURL });
