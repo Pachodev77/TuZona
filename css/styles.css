@@ -1557,3 +1557,39 @@ img {
         max-width: 100%;
     }
 }
+
+/* Dark Mode */
+html[data-theme="dark"] {
+    --text-color: #e0e0e0;
+    --text-light: #aaaaaa;
+    --bg-light: #121212;
+    --border-color: #333333;
+    --white: #1e1e1e;
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+    background-color: var(--white);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s;
+}
+
+.theme-toggle:hover {
+    color: var(--primary-color);
+}
