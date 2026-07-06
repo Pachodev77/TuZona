@@ -1,8 +1,8 @@
 // Import Firebase services from the config file
-import { auth, db, storage } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const publishForm = document.getElementById('publish-form');
@@ -68,24 +68,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Get image files from the uploader and upload to Firebase Storage
+            // Images are already uploaded to Cloudinary by the ImageUploader widget.
+            // Just collect their URLs from the preview elements.
             const imageInputs = document.querySelectorAll('.preview-item img[data-file]');
             for (const img of imageInputs) {
                 try {
                     const fileData = JSON.parse(img.dataset.file);
-                    if (fileData && fileData.url) {
-                        const response = await fetch(fileData.url);
-                        const blob = await response.blob();
-                        const filePath = `ads/${user.uid}/${Date.now()}_${fileData.name || 'image'}`;
-                        const fileRef = storageRef(storage, filePath);
-                        const snapshot = await uploadBytes(fileRef, blob);
-                        const downloadURL = await getDownloadURL(snapshot.ref);
-                        images.push(downloadURL);
+                    if (fileData && fileData.url && fileData.url.startsWith('http')) {
+                        images.push(fileData.url);
                     } else if (img.src && img.src.startsWith('http')) {
                         images.push(img.src);
                     }
                 } catch (error) {
-                    console.error('Error processing image:', error);
+                    console.error('Error collecting image URL:', error);
                 }
             }
 
