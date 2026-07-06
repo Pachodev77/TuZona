@@ -100,7 +100,7 @@ img {
     max-width: 600px;
     display: flex;
     gap: 8px;
-    background: #fff;
+    background: var(--white);
     border-radius: 4px;
     padding: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -270,7 +270,7 @@ img {
     border-radius: 0 4px 4px 0;
     padding: 0 8px;
     font-size: 14px;
-    background-color: #f8f9fa;
+    background-color: var(--bg-light);
     cursor: pointer;
     min-width: 140px;
     outline: none;
@@ -765,7 +765,7 @@ img {
 }
 
 .category-card {
-    background: white;
+    background: var(--white);
     border-radius: 8px;
     padding: 20px 10px;
     text-align: center;
@@ -804,7 +804,7 @@ img {
 }
 
 .ad-card {
-    background: white;
+    background: var(--white);
     border-radius: 8px;
     overflow: hidden;
     box-shadow: var(--box-shadow);
@@ -1240,7 +1240,7 @@ img {
 /* Sidebar */
 .account-sidebar {
     flex: 0 0 280px;
-    background: white;
+    background: var(--white);
     border-radius: 8px;
     padding: 25px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -1299,7 +1299,7 @@ img {
 }
 
 .account-menu a:hover {
-    background: #f8f9fa;
+    background: var(--bg-light);
     color: var(--primary-color);
 }
 
@@ -1327,7 +1327,7 @@ img {
 /* Main Content */
 .account-content {
     flex: 1;
-    background: white;
+    background: var(--white);
     border-radius: 8px;
     padding: 30px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -1355,7 +1355,7 @@ img {
 }
 
 .stat-card {
-    background: #f8f9fa;
+    background: var(--bg-light);
     border-radius: 8px;
     padding: 20px;
     display: flex;
@@ -1420,7 +1420,7 @@ img {
 
 /* Activity Timeline */
 .activity-timeline {
-    border-left: 2px solid #eee;
+    border-left: 2px solid var(--border-color);
     padding-left: 20px;
     margin-left: 10px;
 }
@@ -1450,7 +1450,7 @@ img {
 }
 
 .activity-details {
-    background: #f8f9fa;
+    background: var(--bg-light);
     padding: 12px 15px;
     border-radius: 6px;
     margin-left: 10px;
@@ -1484,7 +1484,7 @@ img {
 .filter-btn {
     padding: 8px 15px;
     border: 1px solid var(--border-color);
-    background: white;
+    background: var(--white);
     border-radius: 20px;
     font-size: 13px;
     cursor: pointer;
