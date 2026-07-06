@@ -14,7 +14,7 @@
 
 .upload-area.drag-over {
     border-color: #4CAF50;
-    background: #f0f8f0;
+    background: rgba(76, 175, 80, 0.1);
 }
 
 .upload-label {
