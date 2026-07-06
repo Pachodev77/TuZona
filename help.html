@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+
         .help-container {
             max-width: 1000px;
             margin: 0 auto;
@@ -32,7 +33,7 @@
             left: 20px;
             top: 50%;
             transform: translateY(-50%);
-            color: #666;
+            color: var(--text-light);
         }
         
         .help-categories {
@@ -43,7 +44,7 @@
         }
         
         .category-card {
-            background: white;
+            background: var(--white);
             border-radius: 8px;
             padding: 25px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -63,11 +64,11 @@
         
         .category-card h3 {
             margin: 0 0 10px 0;
-            color: #333;
+            color: var(--text-color);
         }
         
         .category-card p {
-            color: #666;
+            color: var(--text-light);
             margin-bottom: 15px;
             font-size: 14px;
         }
@@ -96,7 +97,7 @@
         .help-popular h2 {
             text-align: center;
             margin-bottom: 30px;
-            color: #333;
+            color: var(--text-color);
         }
         
         .popular-articles {
@@ -106,7 +107,7 @@
         }
         
         .article-card {
-            background: white;
+            background: var(--white);
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -119,11 +120,11 @@
         
         .article-card h4 {
             margin: 0 0 10px 0;
-            color: #333;
+            color: var(--text-color);
         }
         
         .article-card p {
-            color: #666;
+            color: var(--text-light);
             font-size: 14px;
             margin: 0 0 15px 0;
         }
@@ -136,7 +137,7 @@
         }
         
         .help-contact {
-            background: #f8f9fa;
+            background: var(--bg-light);
             border-radius: 8px;
             padding: 30px;
             text-align: center;
@@ -145,11 +146,11 @@
         
         .help-contact h2 {
             margin-top: 0;
-            color: #333;
+            color: var(--text-color);
         }
         
         .help-contact p {
-            color: #666;
+            color: var(--text-light);
             max-width: 600px;
             margin: 0 auto 20px;
         }
@@ -165,17 +166,17 @@
             display: inline-flex;
             align-items: center;
             padding: 10px 20px;
-            background: white;
-            border: 1px solid #ddd;
+            background: var(--white);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            color: #333;
+            color: var(--text-color);
             text-decoration: none;
             transition: all 0.2s;
         }
         
         .contact-button:hover {
             background: #f0f0f0;
-            border-color: #ccc;
+            border-color:  var(--border-color);
         }
         
         .contact-button i {
@@ -192,7 +193,8 @@
                 padding: 12px 15px 12px 45px;
             }
         }
-    </style>
+    
+</style>
 </head>
 <body>
     <!-- Header -->
