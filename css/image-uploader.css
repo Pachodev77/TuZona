@@ -4,12 +4,12 @@
 }
 
 .upload-area {
-    border: 2px dashed #ccc;
+    border: 2px dashed var(--border-color);
     border-radius: 8px;
     padding: 30px;
     text-align: center;
     transition: all 0.3s ease;
-    background: #f9f9f9;
+    background: var(--bg-light);
 }
 
 .upload-area.drag-over {
