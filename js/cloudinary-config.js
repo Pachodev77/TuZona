@@ -1,10 +1,10 @@
 // Cloudinary Configuration
+// Only the values needed for unsigned uploads from the browser.
+// The API secret must NEVER be exposed in client-side code.
 const cloudinaryConfig = {
-    cloudName: 'dxrbvgr1o',  // Your Cloudinary cloud name
+    cloudName: 'dxrbvgr1o',
     uploadPreset: 'tuzona_uploads',
-    apiKey: '779192924525255',
-    apiSecret: 'A_0vO7809rgqLHw5xQC1eV4hqLI',
-    folder: 'tuzona-uploads'  // Optional: Organize uploads in a folder
+    folder: 'tuzona-uploads'
 };
 
 // Make it globally available

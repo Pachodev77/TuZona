@@ -1,59 +1,33 @@
 // Firebase Authentication Module
 // Handles user authentication using Firebase Authentication
 
-// Import Firebase initialization function
-import initializeFirebase from './firebase-config.js';
-
-// Initialize Firebase services
-let auth, db;
-let authModule, firestoreModule;
-
-// Initialize Firebase when this module is imported
-(async () => {
-    try {
-        // Import Firebase modules
-        [authModule, firestoreModule] = await Promise.all([
-            import('https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js'),
-            import('https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js')
-        ]);
-        
-        // Initialize Firebase
-        const firebase = await initializeFirebase();
-        auth = firebase.auth;
-        db = firebase.db;
-    } catch (error) {
-        console.error('Failed to initialize Firebase:', error);
-    }
-})();
-
-// Destructure auth functions
-const { 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut: firebaseSignOut, 
-    sendEmailVerification: firebaseSendEmailVerification, 
-    sendPasswordResetEmail: firebaseSendPasswordResetEmail, 
-    onAuthStateChanged: firebaseOnAuthStateChanged,
-    updateProfile: firebaseUpdateProfile, 
-    updateEmail: firebaseUpdateEmail,
-    updatePassword: firebaseUpdatePassword, 
+import { auth, db } from './firebase-config.js';
+import { createUserProfile } from './services/user-service.js';
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut as firebaseSignOut,
+    sendEmailVerification as firebaseSendEmailVerification,
+    sendPasswordResetEmail as firebaseSendPasswordResetEmail,
+    onAuthStateChanged,
+    updateProfile as firebaseUpdateProfile,
+    updateEmail as firebaseUpdateEmail,
+    updatePassword as firebaseUpdatePassword,
     reauthenticateWithCredential,
-    EmailAuthProvider, 
-    GoogleAuthProvider, 
-    signInWithPopup 
-} = authModule || {};
-
-// Destructure firestore functions
-const { 
-    doc, 
-    setDoc, 
-    getDoc, 
+    EmailAuthProvider,
+    GoogleAuthProvider,
+    signInWithPopup
+} from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
+import {
+    doc,
+    setDoc,
+    getDoc,
     updateDoc,
     collection,
     query,
     where,
     getDocs
-} = firestoreModule || {};
+} from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
 
 // Error messages mapping
 const ERROR_MESSAGES = {
@@ -69,6 +43,8 @@ const ERROR_MESSAGES = {
     'default': 'Se produjo un error inesperado. Por favor, inténtalo de nuevo.'
 };
 
+const getErrorMessage = (code) => ERROR_MESSAGES[code] || ERROR_MESSAGES['default'];
+
 /**
  * Get the current authenticated user
  * @returns {Object|null} The current user object or null if not authenticated
@@ -83,8 +59,8 @@ export const getCurrentUser = () => {
  */
 export const isAuthenticated = () => {
     return new Promise((resolve) => {
-        const unsubscribe = firebaseOnAuthStateChanged(auth, (user) => {
-            unsubscribe(); // Unsubscribe immediately
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            unsubscribe();
             resolve(!!user);
         });
     });
@@ -99,70 +75,23 @@ export const isAuthenticated = () => {
  */
 export const signUp = async (email, password, userData = {}) => {
     try {
-        // Create user with email and password
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const { user } = userCredential;
-        
-        // Prepare user profile data
-        const userProfile = {
-            uid: user.uid,
-            email: user.email,
-            emailVerified: user.emailVerified,
-            displayName: userData.displayName || '',
-            photoURL: userData.photoURL || 'https://via.placeholder.com/150',
-            phoneNumber: userData.phoneNumber || '',
-            isAdmin: false,
-            isBanned: false,
-            settings: {
-                publicProfile: true,
-                showEmail: false,
-                showPhone: true,
-                notifications: true,
-                emailNotifications: true,
-                theme: 'light',
-                language: 'es'
-            },
-            stats: {
-                activeAds: 0,
-                totalAds: 0,
-                totalViews: 0,
-                unreadMessages: 0,
-                rating: 0,
-                reviews: 0
-            },
-            preferences: {
-                categories: [],
-                locations: [],
-                notificationFrequency: 'daily'
-            },
-            socialLinks: {
-                facebook: '',
-                twitter: '',
-                instagram: '',
-                linkedin: ''
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-            ...userData
-        };
-        
-        // Save user profile to Firestore
-        await setDoc(doc(db, 'users', user.uid), userProfile);
-        
-        // Send email verification
-        await sendEmailVerification();
-        
-        return {
-            success: true,
-            user: userProfile
-        };
+
+        const userProfile = await createUserProfile(user, userData);
+
+        try {
+            if (firebaseSendEmailVerification) {
+                await firebaseSendEmailVerification(user);
+            }
+        } catch (verificationError) {
+            console.warn('No se pudo enviar el correo de verificación:', verificationError);
+        }
+
+        return { success: true, user: userProfile };
     } catch (error) {
         console.error('Sign up error:', error);
-        return {
-            success: false,
-            error: getErrorMessage(error.code)
-        };
+        return { success: false, error: getErrorMessage(error.code) };
     }
 };
 
@@ -186,7 +115,7 @@ export const signIn = async (email, password) => {
     } catch (error) {
         console.error('Error signing in:', error);
         let errorMessage = 'Error al iniciar sesión';
-        
+
         if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
             errorMessage = 'Correo o contraseña incorrectos';
         } else if (error.code === 'auth/too-many-requests') {
@@ -194,11 +123,8 @@ export const signIn = async (email, password) => {
         } else if (error.code === 'auth/user-disabled') {
             errorMessage = 'Esta cuenta ha sido deshabilitada';
         }
-        
-        return {
-            success: false,
-            error: errorMessage
-        };
+
+        return { success: false, error: errorMessage };
     }
 };
 
@@ -212,13 +138,9 @@ export const signOut = async () => {
         return { success: true };
     } catch (error) {
         console.error('Error signing out:', error);
-        return {
-            success: false,
-            error: 'Error al cerrar sesión'
-        };
+        return { success: false, error: 'Error al cerrar sesión' };
     }
 };
-
 
 /**
  * Send password reset email
@@ -227,12 +149,12 @@ export const signOut = async () => {
  */
 export const sendPasswordResetEmail = async (email) => {
     try {
-        await sendPasswordResetEmail(auth, email);
+        await firebaseSendPasswordResetEmail(auth, email);
         return { success: true };
     } catch (error) {
         console.error('Error sending password reset email:', error);
         let errorMessage = 'Error al enviar el correo de restablecimiento de contraseña';
-        
+
         if (error.code === 'auth/user-not-found') {
             errorMessage = 'No hay ninguna cuenta registrada con este correo electrónico';
         } else if (error.code === 'auth/invalid-email') {
@@ -240,10 +162,91 @@ export const sendPasswordResetEmail = async (email) => {
         } else if (error.code === 'auth/too-many-requests') {
             errorMessage = 'Demasiados intentos. Por favor, inténtalo de nuevo más tarde';
         }
-        
-        return {
-            success: false,
-            error: errorMessage
-        };
+
+        return { success: false, error: errorMessage };
     }
 };
+
+/**
+ * Update the current user's profile (display name / photo)
+ * @param {Object} profile - { displayName?, photoURL? }
+ */
+export const updateProfile = async (profile) => {
+    try {
+        if (auth.currentUser) {
+            await firebaseUpdateProfile(auth.currentUser, profile);
+        }
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        return { success: false, error: getErrorMessage(error.code) };
+    }
+};
+
+/**
+ * Change the current user's password (re-authenticating first)
+ * @param {string} currentPassword
+ * @param {string} newPassword
+ */
+export const changePassword = async (currentPassword, newPassword) => {
+    try {
+        const user = auth.currentUser;
+        if (!user || !user.email) throw new Error('auth/user-not-found');
+
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        await firebaseUpdatePassword(user, newPassword);
+        return { success: true };
+    } catch (error) {
+        console.error('Error changing password:', error);
+        return { success: false, error: getErrorMessage(error.code) };
+    }
+};
+
+/**
+ * Sign in (or sign up) with a Google account.
+ * Creates the Firestore profile document if it does not exist yet.
+ * @returns {Promise<{success: boolean, user?: Object, error?: string}>}
+ */
+export const signInWithGoogle = async () => {
+    try {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        // Ensure the user has a profile document
+        const userRef = doc(db, 'users', user.uid);
+        const snap = await getDoc(userRef);
+        if (!snap.exists()) {
+            try {
+                await createUserProfile(user);
+            } catch (profileError) {
+                console.warn('No se pudo crear el perfil de Google:', profileError);
+            }
+        }
+
+        return {
+            success: true,
+            user: {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL
+            }
+        };
+    } catch (error) {
+        console.error('Google sign-in error:', error);
+        let errorMessage = 'No se pudo iniciar sesión con Google';
+        if (error.code === 'auth/popup-closed-by-user') {
+            errorMessage = 'Ventana de Google cerrada antes de completar el inicio de sesión';
+        } else if (error.code === 'auth/cancelled-popup-request') {
+            errorMessage = 'Solicitud de inicio de sesión cancelada';
+        } else if (error.code === 'auth/account-exists-with-different-credential') {
+            errorMessage = 'Ya existe una cuenta con este correo usando otro método de inicio de sesión';
+        }
+        return { success: false, error: errorMessage };
+    }
+};
+
+// Export the Firebase instances so other modules can reuse them
+export { auth, db, onAuthStateChanged };

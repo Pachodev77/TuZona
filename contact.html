@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TuZona - Clasificados en Colombia</title>
+    <title>Contacto - TuZona</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/legal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -17,7 +18,7 @@
                 </a>
             </div>
             <div class="search-bar">
-                <input type="text" placeholder="¿Qué estás buscando?">
+                <input type="text" id="header-search" placeholder="¿Qué estás buscando?">
                 <button type="submit" class="search-btn">
                     <i class="fas fa-search"></i>
                 </button>
@@ -59,7 +60,6 @@
                 </select>
             </div>
             <div class="user-actions">
-                
                 <button id="theme-toggle" class="theme-toggle" title="Cambiar tema">
                     <i class="fas fa-moon"></i>
                 </button>
@@ -79,28 +79,100 @@
                 <li><a href="category.html?category=Celulares"><i class="fas fa-mobile-alt"></i> Celulares</a></li>
                 <li><a href="category.html?category=Computación"><i class="fas fa-laptop"></i> Computación</a></li>
                 <li><a href="category.html?category=Moda"><i class="fas fa-tshirt"></i> Moda</a></li>
-                <li><a href="#"><i class="fas fa-ellipsis-h"></i> Más</a></li>
+                <li><a href="categories.html"><i class="fas fa-ellipsis-h"></i> Más</a></li>
             </ul>
         </div>
     </nav>
 
     <!-- Main Content -->
     <main class="container main-content">
-        <section class="category-results">
-            <div class="section-header">
-                <h2 id="category-title">Resultados para...</h2>
-                <a href="index.html" class="see-all">Volver al inicio</a>
+        <div class="page-header">
+            <h1>Contáctanos</h1>
+            <nav class="breadcrumb">
+                <a href="index.html">Inicio</a> &gt; <span>Contacto</span>
+            </nav>
+        </div>
+        <p class="legal-intro">
+            ¿Tienes preguntas, sugerencias o necesitas ayuda? Escríbenos y te responderemos lo antes posible.
+        </p>
+
+        <div class="contact-wrapper">
+            <!-- Información de contacto -->
+            <div class="contact-info">
+                <h3>Información de contacto</h3>
+                <div class="contact-info-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <strong>Correo electrónico</strong>
+                        <span>soporte@tuzona.com</span>
+                    </div>
+                </div>
+                <div class="contact-info-item">
+                    <i class="fas fa-phone"></i>
+                    <div>
+                        <strong>Teléfono</strong>
+                        <span>+57 1 234 5678</span>
+                    </div>
+                </div>
+                <div class="contact-info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <strong>Ubicación</strong>
+                        <span>Bogotá, Colombia</span>
+                    </div>
+                </div>
+                <div class="contact-info-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>Horario de atención</strong>
+                        <span>Lunes a viernes, 8:00 a.m. - 6:00 p.m.</span>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:1.5rem;">¿Necesitas ayuda rápida?</h3>
+                <p style="color: var(--text-light); font-size: 0.9rem;">
+                    Visita nuestro <a href="help.html">Centro de Ayuda</a> para respuestas inmediatas
+                    a las preguntas más comunes.
+                </p>
             </div>
-            <div class="ads-grid" id="category-ads">
-                <!-- Ads will be loaded by JavaScript -->
-            </div>
-        </section>
+
+            <!-- Formulario de contacto -->
+            <form class="contact-form" id="contact-form" novalidate>
+                <div class="form-group" id="group-name">
+                    <label for="name">Nombre completo</label>
+                    <input type="text" id="name" name="name" placeholder="Tu nombre" required>
+                    <span class="form-error">Por favor ingresa tu nombre.</span>
+                </div>
+
+                <div class="form-group" id="group-email">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" placeholder="tucorreo@ejemplo.com" required>
+                    <span class="form-error">Por favor ingresa un correo electrónico válido.</span>
+                </div>
+
+                <div class="form-group" id="group-subject">
+                    <label for="subject">Asunto</label>
+                    <input type="text" id="subject" name="subject" placeholder="¿Sobre qué nos escribes?" required>
+                    <span class="form-error">Por favor ingresa un asunto.</span>
+                </div>
+
+                <div class="form-group" id="group-message">
+                    <label for="message">Mensaje</label>
+                    <textarea id="message" name="message" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                    <span class="form-error">Por favor escribe un mensaje (mínimo 10 caracteres).</span>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;">
+                    <i class="fas fa-paper-plane"></i> Enviar mensaje
+                </button>
+            </form>
+        </div>
     </main>
 
     <!-- Footer (inyectado desde js/footer.js) -->
     <footer class="footer" id="site-footer"></footer>
 
-    <script type="module" src="js/category.js"></script>
+    <script type="module" src="js/contact.js"></script>
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/footer.js"></script>
 </body>

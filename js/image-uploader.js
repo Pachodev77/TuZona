@@ -6,12 +6,32 @@ class ImageUploader {
         this.uploadedImages = [];
         this.previewContainer = null;
         this.onUploadComplete = options.onUploadComplete || null;
+        this.initialImages = Array.isArray(options.initialImages) ? options.initialImages : [];
         this.initialize();
     }
 
     initialize() {
         this.createUploadArea();
         this.setupEventListeners();
+        this.renderInitialImages();
+    }
+
+    renderInitialImages() {
+        const previewGrid = this.previewContainer.querySelector('.preview-grid');
+        if (!previewGrid) return;
+
+        this.initialImages.forEach((url) => {
+            const fileData = { name: 'existing', type: 'image', size: 0, url };
+            const preview = this.createPreviewElement(url, fileData);
+            previewGrid.appendChild(preview);
+            this.uploadedImages.push({ file: { name: 'existing', url }, previewElement: preview });
+        });
+
+        this.updateUploadArea();
+
+        if (this.uploadedImages.length === 1 && this.onUploadComplete) {
+            this.onUploadComplete(this.uploadedImages[0].file.url);
+        }
     }
 
     createUploadArea() {

@@ -17,8 +17,8 @@
                 </a>
             </div>
             <div class="search-bar">
-                <input type="text" placeholder="¿Qué estás buscando?">
-                <button type="submit" class="search-btn">
+                <input type="text" id="search-input" placeholder="¿Qué estás buscando?">
+                <button type="submit" id="search-button" class="search-btn">
                     <i class="fas fa-search"></i>
                 </button>
                 <select id="region">
@@ -69,6 +69,21 @@
         </div>
     </header>
 
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a href="category.html?category=Vehículos"><i class="fas fa-car"></i> Vehículos</a></li>
+                <li><a href="category.html?category=Inmuebles"><i class="fas fa-home"></i> Inmuebles</a></li>
+                <li><a href="category.html?category=Celulares"><i class="fas fa-mobile-alt"></i> Celulares</a></li>
+                <li><a href="category.html?category=Computación"><i class="fas fa-laptop"></i> Computación</a></li>
+                <li><a href="category.html?category=Moda"><i class="fas fa-tshirt"></i> Moda</a></li>
+                <li><a href="#"><i class="fas fa-ellipsis-h"></i> Más</a></li>
+            </ul>
+        </div>
+    </nav>
+
     <!-- Main Content -->
     <main class="container main-content">
         <section class="search-results">
@@ -82,16 +97,12 @@
         </section>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2023 TuZona - Todos los derechos reservados</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer (inyectado desde js/footer.js) -->
+    <footer class="footer" id="site-footer"></footer>
 
-    <script src="js/search.js"></script>
-    <script src="js/main.js"></script>
+    <script type="module" src="js/footer.js"></script>
+
+    <script type="module" src="js/search.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

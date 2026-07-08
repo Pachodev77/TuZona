@@ -1,4 +1,4 @@
-import { signIn, auth } from './auth.js';
+import { signIn, signInWithGoogle, auth } from './auth.js';
 import { showError, showSuccess, showLoading, hideLoading } from './ui-helpers.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js';
 
@@ -166,6 +166,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     input.classList.remove('is-invalid');
                 }
             });
+        });
+    }
+
+    // Google sign-in
+    const googleButton = document.getElementById('google-login-button');
+    if (googleButton) {
+        googleButton.addEventListener('click', async () => {
+            googleButton.disabled = true;
+            googleButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
+            try {
+                const result = await signInWithGoogle();
+                if (result.success) {
+                    showSuccess('¡Inicio de sesión con Google exitoso!');
+                    setTimeout(() => { window.location.href = 'account.html'; }, 1000);
+                } else {
+                    throw new Error(result.error || 'Error al iniciar sesión con Google');
+                }
+            } catch (error) {
+                console.error('Google sign-in error:', error);
+                showError(error.message || 'Error al iniciar sesión con Google');
+                googleButton.disabled = false;
+                googleButton.innerHTML = '<i class="fab fa-google"></i> Continuar con Google';
+            }
         });
     }
 });

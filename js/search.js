@@ -1,142 +1,86 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const searchAdsContainer = document.getElementById('search-ads');
-    const searchTitle = document.getElementById('search-title');
-    const searchInput = document.getElementById('search-input');
-    const regionSelect = document.getElementById('region');
-    const searchButton = document.getElementById('search-button');
+import { AdService } from './services/ad-service.js';
+import { formatRelativeDate, createAdCard } from './ui-helpers.js';
 
-    // Function to get ads from localStorage
-    const getAds = () => {
-        let ads = [];
-        const adsJSON = localStorage.getItem('sampleAds');
+// DOM Elements
+const searchAdsContainer = document.getElementById('search-ads');
+const searchTitle = document.getElementById('search-title');
+const searchInput = document.getElementById('search-input');
+const regionSelect = document.getElementById('region');
+const searchButton = document.getElementById('search-button');
 
-        if (adsJSON) {
-            ads = JSON.parse(adsJSON);
-        } else {
-            // Default ads if localStorage is empty
-            ads = []; 
-        }
+const matchesQuery = (ad, query) => {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return (
+        (ad.title && ad.title.toLowerCase().includes(q)) ||
+        (ad.description && ad.description.toLowerCase().includes(q)) ||
+        (ad.category && ad.category.toLowerCase().includes(q))
+    );
+};
 
-        // Data migration for old ads
-        const migratedAds = ads.map(ad => {
-            if (!ad.hasOwnProperty('description')) {
-                ad.description = 'No hay descripción disponible.';
-            }
-            if (!ad.hasOwnProperty('condition')) {
-                ad.condition = 'No especificado';
-            }
-            if (!ad.hasOwnProperty('seller')) {
-                ad.seller = {
-                    name: 'Vendedor anónimo',
-                    phone: 'No disponible'
-                };
-            }
-            return ad;
-        });
+const matchesRegion = (ad, region) => {
+    if (!region) return true;
+    const location = (ad.location || '').trim().toLowerCase();
+    if (!location) return false;
+    const regionLower = region.trim().toLowerCase();
+    return location.includes(regionLower) || regionLower.includes(location.split(',')[0] || '');
+};
+};
 
-        localStorage.setItem('sampleAds', JSON.stringify(migratedAds));
+const displaySearchResults = (allAds, query = '', region = '') => {
+    const filtered = allAds.filter(ad => matchesQuery(ad, query) && matchesRegion(ad, region));
 
-        return migratedAds;
-    };
+    if (query && region) {
+        searchTitle.textContent = `Resultados para "${query}" en ${region}`;
+    } else if (query) {
+        searchTitle.textContent = `Resultados para "${query}"`;
+    } else if (region) {
+        searchTitle.textContent = `Anuncios en ${region}`;
+    } else {
+        searchTitle.textContent = 'Todos los anuncios';
+    }
 
-    const formatPrice = (price) => {
-        return `$${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
-    };
+    if (!filtered.length) {
+        searchAdsContainer.innerHTML = '<p class="no-results">No se encontraron anuncios que coincidan con tu búsqueda.</p>';
+        return;
+    }
 
-    const createAdCard = (ad) => {
-        return `
-            <a href="ad.html?id=${ad.id}" class="ad-card" data-id="${ad.id}">
-                <div class="ad-image">
-                    <img src="${ad.image}" alt="${ad.title}">
-                    <div class="ad-price">${formatPrice(ad.price)}</div>
-                </div>
-                <div class="ad-details">
-                    <h3 class="ad-title">${ad.title}</h3>
-                    <div class="ad-location">
-                        <i class="fas fa-map-marker-alt"></i>
-                        ${ad.location}
-                    </div>
-                    <div class="ad-meta">
-                        <span>${ad.category}</span>
-                        <span>${ad.date}</span>
-                    </div>
-                </div>
-            </a>
-        `;
-    };
+    searchAdsContainer.innerHTML = filtered.map(createAdCard).join('');
+};
 
-    // Initialize search with URL parameters
+document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const searchQuery = urlParams.get('query') || '';
     const regionQuery = urlParams.get('region') || '';
-    
-    searchInput.value = searchQuery;
-    if (regionSelect && regionQuery) {
-        regionSelect.value = regionQuery;
-    }
 
-    const displaySearchResults = (query = '', region = '') => {
-        const ads = getAds();
-        
-        // Filter ads based on search query and region
-        const filteredAds = ads.filter(ad => {
-            // If there's a query, check if it matches title, description, or category
-            const matchesQuery = !query || 
-                ad.title.toLowerCase().includes(query.toLowerCase()) || 
-                (ad.description && ad.description.toLowerCase().includes(query.toLowerCase())) ||
-                (ad.category && ad.category.toLowerCase().includes(query.toLowerCase()));
-            
-            // If a region is selected, check if it matches the ad's location
-            let matchesRegion = true;
-            if (region) {
-                // Convert both to lowercase for case-insensitive comparison
-                const location = ad.location ? ad.location.toLowerCase() : '';
-                const regionLower = region.toLowerCase();
-                
-                // Check if the location includes the region or vice versa
-                matchesRegion = location.includes(regionLower) || 
-                              regionLower.includes(location.split(',')[0].toLowerCase());
-            }
-                
-            return matchesQuery && matchesRegion;
-        });
+    if (searchInput) searchInput.value = searchQuery;
+    if (regionSelect && regionQuery) regionSelect.value = regionQuery;
 
-        // Update the search results title
-        if (query && region) {
-            searchTitle.textContent = `Resultados para "${query}" en ${region}`;
-        } else if (query) {
-            searchTitle.textContent = `Resultados para "${query}"`;
-        } else if (region) {
-            searchTitle.textContent = `Anuncios en ${region}`;
-        } else {
-            searchTitle.textContent = 'Todos los anuncios';
-        }
+    searchAdsContainer.innerHTML = '<div class="loading">Cargando anuncios...</div>';
 
-        searchAdsContainer.innerHTML = '';
-        if (filteredAds.length > 0) {
-            filteredAds.forEach(ad => {
-                searchAdsContainer.innerHTML += createAdCard(ad);
+    try {
+        const ads = await AdService.getActiveAds();
+        const performSearch = () => {
+            const query = searchInput ? searchInput.value.trim() : searchQuery;
+            const region = regionSelect ? regionSelect.value : regionQuery;
+            displaySearchResults(ads, query, region);
+        };
+
+        if (searchButton) searchButton.addEventListener('click', performSearch);
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performSearch();
             });
-        } else {
-            searchAdsContainer.innerHTML = '<p class="no-results">No se encontraron anuncios que coincidan con tu búsqueda.</p>';
         }
-    };
 
-    const performSearch = () => {
-        const query = searchInput.value.trim().toLowerCase();
-        const region = regionSelect ? regionSelect.value : '';
-        displaySearchResults(query, region);
-    };
-
-    searchButton.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            performSearch();
+        // If a region is chosen from the header, re-run the search
+        if (regionSelect) {
+            regionSelect.addEventListener('change', performSearch);
         }
-    });
 
-    // Display initial results if there's a search query or region filter
-    if (searchQuery || regionQuery) {
-        displaySearchResults(searchQuery, regionQuery);
+        displaySearchResults(ads, searchQuery, regionQuery);
+    } catch (error) {
+        console.error('Error al buscar anuncios:', error);
+        searchAdsContainer.innerHTML = '<p class="error">Error al cargar los anuncios. Por favor, recarga la página.</p>';
     }
 });

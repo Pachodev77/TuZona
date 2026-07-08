@@ -374,41 +374,16 @@
                 <h2>¿No encuentras lo que buscas?</h2>
                 <p>Nuestro equipo de soporte está listo para ayudarte con cualquier pregunta o inquietud que tengas.</p>
                 <div class="contact-buttons">
-                    <a href="#" class="contact-button"><i class="fas fa-envelope"></i> Enviar mensaje</a>
-                    <a href="#" class="contact-button"><i class="fas fa-phone"></i> Llamar al soporte</a>
-                    <a href="#" class="contact-button"><i class="fas fa-comments"></i> Chat en vivo</a>
+                    <a href="contact.html" class="contact-button"><i class="fas fa-envelope"></i> Enviar mensaje</a>
+                    <a href="contact.html" class="contact-button"><i class="fas fa-phone"></i> Llamar al soporte</a>
+                    <a href="contact.html" class="contact-button"><i class="fas fa-comments"></i> Chat en vivo</a>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Acerca de TuZona</h3>
-                    <p>El mejor lugar para comprar y vender productos y servicios en Colombia.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Enlaces útiles</h3>
-                    <ul>
-                        <li><a href="#">Términos y condiciones</a></li>
-                        <li><a href="#">Política de privacidad</a></li>
-                        <li><a href="help.html">Ayuda y soporte</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Contáctanos</h3>
-                    <p>Email: soporte@tuzona.com</p>
-                    <p>Teléfono: +57 300 123 4567</p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 TuZona. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer (inyectado desde js/footer.js) -->
+    <footer class="footer" id="site-footer"></footer>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -449,6 +424,7 @@
         });
     });
     </script>
-    <script src="js/main.js"></script>
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/footer.js"></script>
 </body>
 </html>

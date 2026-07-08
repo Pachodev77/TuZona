@@ -188,13 +188,74 @@ export function formatDate(date) {
     const d = new Date(date);
     if (isNaN(d.getTime())) return '';
     
-    return d.toLocaleDateString('es-ES', {
+    return d.toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+/**
+ * Format a price using Colombian Peso grouping (e.g. 1.250.000).
+ * Accepts a number or a string that may contain non-digit characters.
+ * @param {number|string} price
+ * @returns {string}
+ */
+export function formatPrice(price) {
+    if (price == null) return '$0';
+    const num = typeof price === 'number' ? price : Number(String(price).replace(/\D/g, '')) || 0;
+    return `$${num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+}
+
+/**
+ * Format a Firestore Timestamp, Date or ISO string into a relative label
+ * ("Hoy", "Ayer", "Hace N días" or a long date).
+ * @param {*} value
+ * @returns {string}
+ */
+export function formatRelativeDate(value) {
+    if (!value) return 'Fecha no disponible';
+    const date = value?.toDate ? value.toDate() : new Date(value);
+    if (isNaN(date.getTime())) return 'Fecha no disponible';
+    const diffDays = Math.floor(Math.abs(new Date() - date) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Hoy';
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return date.toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+/**
+ * Build the HTML for a standard ad card used in listing grids
+ * (home, search, category and region results).
+ * @param {Object} ad - Ad document (must include id)
+ * @returns {string}
+ */
+export function createAdCard(ad) {
+    const imageUrl = Array.isArray(ad.images) && ad.images.length > 0
+        ? ad.images[0]
+        : (ad.image || 'images/placeholder.jpg');
+
+    return `
+        <a href="ad.html?id=${ad.id}" class="ad-card" data-id="${ad.id}">
+            <div class="ad-image">
+                <img src="${imageUrl}" alt="${ad.title}" onerror="this.src='images/placeholder.jpg'">
+                <div class="ad-price">${formatPrice(ad.price)}</div>
+            </div>
+            <div class="ad-details">
+                <h3 class="ad-title">${ad.title}</h3>
+                <div class="ad-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    ${ad.location || 'Ubicación no especificada'}
+                </div>
+                <div class="ad-meta">
+                    <span>${ad.category || ''}</span>
+                    <span>${formatRelativeDate(ad.createdAt)}</span>
+                </div>
+            </div>
+        </a>
+    `;
 }
 
 /**

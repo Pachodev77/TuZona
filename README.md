@@ -1,62 +1,100 @@
 # TuZona - Clasificados en Colombia
 
-TuZona es una aplicación web de clasificados y anuncios para las regiones de Colombia, inspirada en sitios como OLX y Craigslist. La plataforma permite a los usuarios publicar, buscar y encontrar productos y servicios en diferentes categorías y regiones del país.
+TuZona es una aplicación web de clasificados y anuncios para las regiones de Colombia, inspirada en sitios como OLX y Craigslist. Permite a los usuarios publicar, buscar y encontrar productos y servicios en diferentes categorías y regiones del país.
 
 ## Características
 
-- Interfaz de usuario limpia y moderna
-- Diseño completamente responsivo para dispositivos móviles y de escritorio
+- Interfaz limpia y moderna, totalmente responsiva (móvil y escritorio)
 - Búsqueda por categorías y regiones de Colombia
-- Anuncios destacados y recientes
-- Filtrado de búsqueda
-- Fácil navegación entre categorías
+- Anuncios destacados y recientes en la página principal
+- Filtrado de búsqueda por texto y región
+- Autenticación (email/contraseña y Google), perfiles y favoritos
+- Mensajería entre compradores y vendedores en tiempo real
+- Modo oscuro y gestión de cuenta
 
-## Tecnologías Utilizadas
+## Tecnologías
 
-- HTML5
-- CSS3 (Flexbox, Grid, Variables CSS)
-- JavaScript Vanilla (ES6+)
-- Font Awesome para iconos
-- Google Fonts (Segoe UI)
+- HTML5 + CSS3 (Flexbox, Grid, variables CSS)
+- JavaScript Vanilla (ES6 modules)
+- Firebase (Authentication, Firestore, Storage) vía CDN
+- Cloudinary para subida de imágenes (preset sin firmar)
+- Express como servidor estático de desarrollo
 
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 tuzona/
-├── index.html          # Página principal de la aplicación
+├── index.html              # Página principal (destacados / recientes)
+├── search.html             # Resultados de búsqueda
+├── category.html           # Anuncios por categoría
+├── region.html             # Anuncios por región
+├── ad.html                 # Detalle de un anuncio
+├── publish.html            # Crear / editar anuncio
+├── account.html            # Panel del usuario (mis anuncios, favoritos, mensajes)
+├── profile.html            # Edición de perfil público
+├── settings.html           # Configuración de cuenta
+├── favorites.html          # Anuncios guardados
+├── messages.html           # Mensajería
+├── login.html / register.html / forgot-password.html
+├── help.html
 ├── css/
-│   └── styles.css     # Estilos principales de la aplicación
+│   └── styles.css          # Estilos principales
 ├── js/
-│   └── app.js         # Lógica de la aplicación
-└── README.md          # Este archivo
+│   ├── firebase-config.js  # Inicialización única de Firebase (singleton)
+│   ├── app.js              # Lógica de la página principal
+│   ├── main.js             # Modo oscuro + UI de autenticación en el header
+│   ├── ui-helpers.js       # Utilidades compartidas (formatPrice, formatRelativeDate, createAdCard, alertas)
+│   ├── auth.js             # Registro / login / logout / Google
+│   ├── publish.js, category.js, search.js, region.js, ad.js
+│   ├── account.js, account-sections.js, settings.js
+│   ├── favorites.js, messages.js, login.js, register.js
+│   ├── image-uploader.js, cloudinary-config.js
+│   └── services/           # Capa de datos Firestore
+│       ├── ad-service.js
+│       ├── user-service.js
+│       ├── favorites-service.js
+│       ├── message-service.js
+│   └── user-service.js (perfil de usuario)
+├── server.js               # Servidor estático de desarrollo (Express)
+├── firebase.json, firestore.rules, firestore.indexes.json, .firebaserc
+└── package.json
 ```
 
-## Cómo Ejecutar el Proyecto
+## Modelo de datos (Firestore)
 
-1. Clona este repositorio o descarga los archivos
-2. Abre el archivo `index.html` en tu navegador web favorito
+- `ads/{id}`: título, precio, ubicación, categoría, imágenes, vendedor, `featured`, `status`, `createdAt`, `views`.
+- `users/{uid}`: perfil con `settings`, `stats`, `preferences`, `socialLinks`.
+- `favorites/{uid}/ads/{adId}`: anuncios guardados por usuario.
+- `conversations/{id}` y `conversations/{id}/messages`: mensajes entre usuarios.
 
-O si prefieres usar un servidor local:
+## Cómo ejecutar
 
-1. Asegúrate de tener Python instalado
-2. Navega hasta el directorio del proyecto
-3. Ejecuta uno de los siguientes comandos:
-   - Python 3: `python -m http.server 8000`
-   - Python 2: `python -m SimpleHTTPServer 8000`
-4. Abre tu navegador y ve a `http://localhost:8000`
+Servidor de desarrollo local (Express):
+
+```bash
+npm install
+npm start          # http://localhost:3001
+```
+
+O con un servidor estático cualquiera:
+
+```bash
+python -m http.server 8000
+```
+
+Despliegue en Firebase Hosting:
+
+```bash
+firebase deploy
+```
 
 ## Personalización
 
-Puedes personalizar la aplicación modificando los siguientes archivos:
-
-- `index.html` - Estructura de la página
-- `css/styles.css` - Estilos y diseño
-- `js/app.js` - Funcionalidad y lógica de la aplicación
+- Estilos: `css/styles.css`
+- Lógica y datos: módulos en `js/` y `js/services/`
+- Configuración de Firebase: `js/firebase-config.js`
+- Configuración de Cloudinary: `js/cloudinary-config.js` (solo `cloudName`, `uploadPreset` y `folder`; la subida usa un preset sin firmar)
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más información.
-
-## Contacto
-
-Si tienes preguntas o comentarios, no dudes en contactarnos.
+Este proyecto está bajo la Licencia MIT.

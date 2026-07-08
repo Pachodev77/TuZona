@@ -172,33 +172,45 @@
             padding: 15px;
             border-top: 1px solid var(--border-color);
             background-color: var(--white);
-        }
-        
-        .composer-actions {
             display: flex;
-            margin-bottom: 10px;
+            flex-direction: column;
+            gap: 8px;
         }
-        
-        .composer-actions button {
-            background: none;
-            border: none;
-            color: var(--text-light);
-            font-size: 18px;
-            margin-right: 15px;
-            cursor: pointer;
-            padding: 5px;
+
+        .composer-input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
         }
         
         .composer-input {
-            width: 100%;
+            flex: 1;
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 10px 20px;
             resize: none;
             font-family: inherit;
             font-size: 14px;
-            min-height: 40px;
+            min-height: 42px;
             max-height: 120px;
+            line-height: 1.4;
+            outline: none;
+        }
+
+        .composer-input:focus {
+            border-color: #3498db;
+        }
+
+        .send-btn {
+            flex-shrink: 0;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
         }
         
         .no-conversation-selected {
@@ -362,373 +374,27 @@
                 </div>
                 
                 <form class="message-composer" id="message-form" style="display: none;">
-                    <div class="composer-actions">
-                        <button type="button" title="Adjuntar archivo">
-                            <i class="fas fa-paperclip"></i>
-                        </button>
-                        <button type="button" title="Añadir imagen">
-                            <i class="far fa-image"></i>
-                        </button>
-                    </div>
-                    <div class="composer-input-container">
+                    <div class="composer-input-row">
                         <textarea 
                             class="composer-input" 
                             id="message-input" 
-                            placeholder="Escribe un mensaje..."
+                            placeholder="Escribe un mensaje... (Enter para enviar)"
                             rows="1"
                         ></textarea>
+                        <button type="submit" class="btn btn-primary send-btn" title="Enviar mensaje">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="display: none;">Enviar</button>
                 </form>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Acerca de TuZona</h3>
-                    <p>El mejor lugar para comprar y vender productos y servicios en Colombia.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Enlaces útiles</h3>
-                    <ul>
-                        <li><a href="#">Términos y condiciones</a></li>
-                        <li><a href="#">Política de privacidad</a></li>
-                        <li><a href="#">Ayuda y soporte</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Contáctanos</h3>
-                    <p>Email: info@tuzona.com</p>
-                    <p>Teléfono: +57 300 123 4567</p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 TuZona. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer (inyectado desde js/footer.js) -->
+    <footer class="footer" id="site-footer"></footer>
 
-    <script src="js/account.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const dashboard = new UserDataManager();
-        const conversationsList = document.getElementById('conversations-list');
-        const messageDetail = document.getElementById('message-detail');
-        const messagesContainer = document.getElementById('messages');
-        const messageForm = document.getElementById('message-form');
-        const messageInput = document.getElementById('message-input');
-        const messageRecipient = document.getElementById('message-recipient');
-        const backToConversations = document.getElementById('back-to-conversations');
-        const deleteConversationBtn = document.getElementById('delete-conversation');
-        
-        let currentConversation = null;
-        
-        // Sample conversations data (in a real app, this would come from an API)
-        const conversations = [
-            {
-                id: 'conv1',
-                adId: 'ad_1',
-                adTitle: 'Apartamento en El Poblado',
-                participant: 'Carlos Gómez',
-                lastMessage: 'Hola, ¿el apartamento incluye parqueadero?',
-                time: 'Hace 2 horas',
-                unread: true,
-                avatar: 'CG'
-            },
-            {
-                id: 'conv2',
-                adId: 'ad_2',
-                adTitle: 'iPhone 12 Pro Max 256GB',
-                participant: 'Ana Martínez',
-                lastMessage: '¿Aceptarías $3.800.000?',
-                time: 'Ayer',
-                unread: false,
-                avatar: 'AM'
-            },
-            {
-                id: 'conv3',
-                adId: 'ad_3',
-                adTitle: 'Moto deportiva 2023',
-                participant: 'TuZona',
-                lastMessage: 'Tu anuncio ha sido aprobado y publicado',
-                time: '15/08/2023',
-                unread: false,
-                avatar: 'TZ',
-                isSystem: true
-            }
-        ];
-        
-        // Sample messages data (in a real app, this would come from an API)
-        const messagesData = {
-            conv1: [
-                {
-                    id: 'msg1',
-                    sender: 'Carlos Gómez',
-                    content: 'Hola, ¿el apartamento incluye parqueadero?',
-                    time: '14:30',
-                    isMe: false
-                },
-                {
-                    id: 'msg2',
-                    sender: 'Yo',
-                    content: 'Sí, incluye un parqueadero cubierto.',
-                    time: '14:32',
-                    isMe: true
-                },
-                {
-                    id: 'msg3',
-                    sender: 'Carlos Gómez',
-                    content: 'Perfecto, ¿podría visitarlo mañana en la tarde?',
-                    time: '14:35',
-                    isMe: false
-                }
-            ],
-            conv2: [
-                {
-                    id: 'msg4',
-                    sender: 'Ana Martínez',
-                    content: 'Hola, ¿el iPhone sigue disponible?',
-                    time: 'Ayer, 10:15',
-                    isMe: false
-                },
-                {
-                    id: 'msg5',
-                    sender: 'Yo',
-                    content: 'Sí, aún está disponible. ¿Te interesa?',
-                    time: 'Ayer, 10:20',
-                    isMe: true
-                },
-                {
-                    id: 'msg6',
-                    sender: 'Ana Martínez',
-                    content: 'Sí, ¿aceptarías $3.800.000?',
-                    time: 'Ayer, 10:25',
-                    isMe: false
-                }
-            ]
-        };
-        
-        // Display conversations list
-        function displayConversations() {
-            if (conversations.length === 0) {
-                conversationsList.innerHTML = `
-                    <div class="no-conversations">
-                        <i class="far fa-comments"></i>
-                        <h3>No tienes mensajes</h3>
-                        <p>Cuando tengas mensajes, aparecerán aquí.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            conversationsList.innerHTML = conversations.map(conv => `
-                <div class="conversation" data-conversation-id="${conv.id}">
-                    <div class="conversation-avatar">
-                        ${conv.avatar}
-                    </div>
-                    <div class="conversation-details">
-                        <div class="conversation-header">
-                            <span class="conversation-name">${conv.participant}</span>
-                            <span class="conversation-time">${conv.time}</span>
-                        </div>
-                        <div class="conversation-preview">
-                            ${conv.isSystem ? '<i class="fas fa-bell"></i> ' : ''}
-                            ${conv.lastMessage}
-                            ${conv.unread ? '<span class="unread-badge">Nuevo</span>' : ''}
-                        </div>
-                        <div class="conversation-ad">
-                            <small>${conv.adTitle}</small>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Add event listeners to conversations
-            document.querySelectorAll('.conversation').forEach(conv => {
-                conv.addEventListener('click', function() {
-                    const conversationId = this.dataset.conversationId;
-                    openConversation(conversationId);
-                });
-            });
-        }
-        
-        // Open a conversation
-        function openConversation(conversationId) {
-            const conversation = conversations.find(c => c.id === conversationId);
-            if (!conversation) return;
-            
-            currentConversation = conversation;
-            
-            // Update UI
-            document.querySelectorAll('.conversation').forEach(c => {
-                c.classList.remove('active');
-                if (c.dataset.conversationId === conversationId) {
-                    c.classList.add('active');
-                }
-            });
-            
-            messageRecipient.textContent = conversation.participant;
-            displayMessages(conversationId);
-            
-            // Show message form if it's not a system message
-            messageForm.style.display = conversation.isSystem ? 'none' : 'block';
-            
-            // On mobile, switch to message view
-            if (window.innerWidth <= 768) {
-                conversationsList.style.display = 'none';
-                messageDetail.classList.add('active');
-            }
-            
-            // Mark as read
-            conversation.unread = false;
-            displayConversations();
-        }
-        
-        // Display messages for a conversation
-        function displayMessages(conversationId) {
-            const messages = messagesData[conversationId] || [];
-            
-            if (messages.length === 0) {
-                messagesContainer.innerHTML = `
-                    <div class="no-conversation-selected">
-                        <i class="far fa-comment-dots"></i>
-                        <h3>No hay mensajes</h3>
-                        <p>Envía un mensaje para iniciar la conversación</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            messagesContainer.innerHTML = messages.map(msg => `
-                <div class="message ${msg.isMe ? 'sent' : 'received'}">
-                    <div class="message-bubble">
-                        ${msg.content}
-                    </div>
-                    <div class="message-time">
-                        ${msg.time}
-                    </div>
-                </div>
-            `).join('');
-            
-            // Scroll to bottom
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
-        // Handle back button on mobile
-        backToConversations.addEventListener('click', function() {
-            conversationsList.style.display = 'block';
-            messageDetail.classList.remove('active');
-        });
-        
-        // Handle message form submission
-        messageForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const message = messageInput.value.trim();
-            
-            if (message && currentConversation) {
-                // In a real app, this would send the message to the server
-                const newMessage = {
-                    id: 'msg' + Date.now(),
-                    sender: 'Yo',
-                    content: message,
-                    time: 'Ahora',
-                    isMe: true
-                };
-                
-                // Add to messages data
-                if (!messagesData[currentConversation.id]) {
-                    messagesData[currentConversation.id] = [];
-                }
-                messagesData[currentConversation.id].push(newMessage);
-                
-                // Update UI
-                displayMessages(currentConversation.id);
-                
-                // Clear input
-                messageInput.value = '';
-                
-                // Auto-resize textarea
-                messageInput.style.height = 'auto';
-                messageInput.style.height = messageInput.scrollHeight + 'px';
-                
-                // In a real app, you would also update the last message in the conversations list
-                const conversation = conversations.find(c => c.id === currentConversation.id);
-                if (conversation) {
-                    conversation.lastMessage = message.length > 30 ? message.substring(0, 30) + '...' : message;
-                    conversation.time = 'Ahora';
-                    displayConversations();
-                }
-            }
-        });
-        
-        // Auto-resize textarea as user types
-        messageInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-        
-        // Handle delete conversation
-        deleteConversationBtn.addEventListener('click', function() {
-            if (currentConversation && confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
-                // In a real app, this would delete the conversation from the server
-                const index = conversations.findIndex(c => c.id === currentConversation.id);
-                if (index > -1) {
-                    conversations.splice(index, 1);
-                }
-                
-                // Update UI
-                displayConversations();
-                
-                // Show no conversation selected
-                messagesContainer.innerHTML = `
-                    <div class="no-conversation-selected">
-                        <i class="far fa-comment-dots"></i>
-                        <h3>Selecciona una conversación</h3>
-                        <p>Elige una conversación para ver los mensajes</p>
-                    </div>
-                `;
-                messageForm.style.display = 'none';
-                messageRecipient.textContent = 'Selecciona una conversación';
-                
-                // On mobile, go back to conversations list
-                if (window.innerWidth <= 768) {
-                    conversationsList.style.display = 'block';
-                    messageDetail.classList.remove('active');
-                }
-                
-                currentConversation = null;
-            }
-        });
-        
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                conversationsList.style.display = 'block';
-                messageDetail.style.display = 'flex';
-            } else if (currentConversation) {
-                conversationsList.style.display = 'none';
-                messageDetail.style.display = 'flex';
-            } else {
-                conversationsList.style.display = 'block';
-                messageDetail.style.display = 'none';
-            }
-        });
-        
-        // Initialize
-        displayConversations();
-        
-        // Open conversation from URL hash if present
-        const hash = window.location.hash.substring(1);
-        if (hash.startsWith('conversation-')) {
-            const conversationId = hash.replace('conversation-', '');
-            openConversation(conversationId);
-        }
-    });
-    </script>
-    <script src="js/main.js"></script>
+    <script type="module" src="js/messages.js"></script>
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/footer.js"></script>
 </body>
 </html>

@@ -1,20 +1,7 @@
-// Import Firebase functions
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js';
-import { getFirestore, collection, getDocs, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
-
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyBd-B3w6KanW3fk7vy5eAwtXO-bxXXl9eY",
-    authDomain: "tuzona-6df14.firebaseapp.com",
-    projectId: "tuzona-6df14",
-    storageBucket: "tuzona-6df14.appspot.com",
-    messagingSenderId: "826985285220",
-    appId: "1:826985285220:web:aad7f544961ecfdf2d4171"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Reuse the single Firebase instance configured in firebase-config.js
+import { db } from './firebase-config.js';
+import { collection, getDocs, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
+import { formatRelativeDate, createAdCard } from './ui-helpers.js';
 
 // Function to get ads from Firestore
 const getAds = async (featured = false, limitCount = 20) => {
@@ -23,18 +10,11 @@ const getAds = async (featured = false, limitCount = 20) => {
         let q;
         
         if (featured) {
-            // Get featured ads
-            q = query(adsRef, 
-                where('featured', '==', true),
-                orderBy('createdAt', 'desc'),
-                limit(limitCount)
-            );
+            // Featured ads (no composite index required: filter then sort client-side)
+            q = query(adsRef, where('featured', '==', true));
         } else {
-            // Get recent ads
-            q = query(adsRef, 
-                orderBy('createdAt', 'desc'),
-                limit(limitCount)
-            );
+            // Recent ads
+            q = query(adsRef, orderBy('createdAt', 'desc'), limit(limitCount));
         }
         
         const querySnapshot = await getDocs(q);
@@ -42,68 +22,29 @@ const getAds = async (featured = false, limitCount = 20) => {
         
         querySnapshot.forEach((doc) => {
             const adData = doc.data();
-            // Format the price for display
-            if (typeof adData.price === 'number') {
-                adData.price = adData.price.toLocaleString('es-CO');
-            }
             // Add the document ID and formatted date
             ads.push({
                 id: doc.id,
                 ...adData,
-                date: formatDate(adData.createdAt?.toDate() || new Date())
+                date: formatRelativeDate(adData.createdAt?.toDate() || new Date())
             });
         });
+
+        // Sort featured ads client-side (avoids needing a composite index)
+        if (featured) {
+            ads.sort((a, b) => {
+                const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return tb - ta;
+            });
+            return ads.slice(0, limitCount);
+        }
         
         return ads;
     } catch (error) {
         console.error('Error fetching ads:', error);
         return [];
     }
-};
-
-// Helper function to format date
-const formatDate = (date) => {
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Hoy';
-    if (diffDays === 1) return 'Ayer';
-    if (diffDays < 7) return `Hace ${diffDays} días`;
-    
-    return date.toLocaleDateString('es-CO', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-};
-
-// Format price with Colombian Peso format
-const formatPrice = (price) => {
-    return `$${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
-};
-
-// Create ad card HTML
-const createAdCard = (ad) => {
-    // Use the first image if available, otherwise use a placeholder
-    const imageUrl = Array.isArray(ad.images) && ad.images.length > 0 
-        ? ad.images[0] 
-        : 'images/placeholder.jpg';
-        
-    return `
-        <div class="ad-card">
-            <div class="ad-image">
-                <img src="${imageUrl}" alt="${ad.title}" onerror="this.src='images/placeholder.jpg'">
-                <div class="ad-price">$${formatPrice(ad.price)}</div>
-            </div>
-            <div class="ad-details">
-                <h3>${ad.title}</h3>
-                <p class="ad-location"><i class="fas fa-map-marker-alt"></i> ${ad.location || 'Ubicación no especificada'}</p>
-                <p class="ad-date">${ad.date || 'Fecha no disponible'}</p>
-                <a href="ad.html?id=${ad.id}" class="btn btn-outline btn-block">Ver detalles</a>
-            </div>
-        </div>
-    `;
 };
 
 // Display ads in the DOM
@@ -198,9 +139,6 @@ const initApp = () => {
     
     // Only run these if we're on the homepage
     if (isHomePage) {
-        // Initialize Firebase
-        initializeApp(firebaseConfig);
-        
         // Display ads after a small delay to ensure DOM is ready
         setTimeout(() => {
             displayAds().catch(error => {

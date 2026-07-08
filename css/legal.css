@@ -1,0 +1,303 @@
+/* legal.css — Estilos compartidos para páginas de contenido legal,
+   contacto y catálogos (términos, privacidad, contacto, categorías, regiones).
+   Reutiliza las variables CSS de styles.css y añade soporte para modo oscuro. */
+
+/* ===== Page Header ===== */
+.page-header {
+    padding: 2rem 0 1rem;
+}
+
+.page-header h1 {
+    font-size: 1.9rem;
+    color: var(--text-color);
+    margin-bottom: 0.35rem;
+}
+
+.breadcrumb {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* ===== Contenido legal (texto largo) ===== */
+.legal-content {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 2.5rem;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 2rem;
+}
+
+.legal-content .legal-intro {
+    color: var(--text-light);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.legal-content section {
+    margin-bottom: 1.75rem;
+}
+
+.legal-content h2 {
+    font-size: 1.25rem;
+    color: var(--text-color);
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.legal-content p,
+.legal-content li {
+    color: var(--text-color);
+    line-height: 1.75;
+    margin-bottom: 0.6rem;
+}
+
+.legal-content ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.legal-content a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.legal-meta {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    text-align: right;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* ===== Formulario de contacto ===== */
+.contact-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.contact-info {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 1.75rem;
+    box-shadow: var(--box-shadow);
+}
+
+.contact-info h3 {
+    font-size: 1.15rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+.contact-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.1rem;
+    color: var(--text-color);
+}
+
+.contact-info-item i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    margin-top: 0.15rem;
+}
+
+.contact-info-item span {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.contact-form {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 1.75rem;
+    box-shadow: var(--box-shadow);
+}
+
+.contact-form .form-group {
+    margin-bottom: 1.1rem;
+}
+
+.contact-form label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.35rem;
+    color: var(--text-color);
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--text-color);
+    background: var(--white);
+    transition: var(--transition);
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+}
+
+.contact-form textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.form-error {
+    display: none;
+    color: #e74c3c;
+    font-size: 0.82rem;
+    margin-top: 0.3rem;
+}
+
+.form-group.invalid input,
+.form-group.invalid textarea {
+    border-color: #e74c3c;
+}
+
+.form-group.invalid .form-error {
+    display: block;
+}
+
+/* ===== Catálogos (categorías / regiones) ===== */
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin: 1.5rem 0 2rem;
+}
+
+.catalog-card {
+    background: var(--white);
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: var(--transition);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.catalog-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    color: var(--primary-color);
+}
+
+.catalog-card .icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(76, 175, 80, 0.12);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 0.85rem;
+}
+
+.catalog-card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.catalog-card p {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin: 0;
+}
+
+/* ===== Estados de carga / vacío ===== */
+.state-message {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-light);
+}
+
+.state-message i {
+    font-size: 2.5rem;
+    color: var(--border-color);
+    margin-bottom: 1rem;
+}
+
+/* ===== Modo oscuro ===== */
+[data-theme="dark"] .legal-content,
+[data-theme="dark"] .contact-info,
+[data-theme="dark"] .contact-form,
+[data-theme="dark"] .catalog-card {
+    background: #1f2937;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .legal-content h2,
+[data-theme="dark"] .legal-content p,
+[data-theme="dark"] .legal-content li,
+[data-theme="dark"] .contact-info h3,
+[data-theme="dark"] .contact-info-item,
+[data-theme="dark"] .contact-form label,
+[data-theme="dark"] .catalog-card,
+[data-theme="dark"] .page-header h1 {
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .legal-content h2 {
+    border-bottom-color: #374151;
+}
+
+[data-theme="dark"] .contact-form input,
+[data-theme="dark"] .contact-form textarea {
+    background: #111827;
+    border-color: #374151;
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .catalog-card .icon-circle {
+    background: rgba(76, 175, 80, 0.2);
+}
+
+[data-theme="dark"] .catalog-card p {
+    color: #9ca3af;
+}
+
+[data-theme="dark"] .legal-meta {
+    border-top-color: #374151;
+    color: #9ca3af;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .contact-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    .legal-content {
+        padding: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+    }
+}

@@ -1,3 +1,5 @@
+import { auth, onAuthStateChanged } from './auth.js';
+
 // Handle Dark Mode
 const initDarkMode = () => {
     const themeToggle = document.getElementById('theme-toggle');
@@ -25,17 +27,26 @@ const initDarkMode = () => {
     });
 };
 
+// Update the header auth button based on the real auth state
+const initAuthUI = () => {
+    const userActions = document.querySelector('.user-actions');
+    if (!userActions) return;
+
+    const loginBtn = userActions.querySelector('a[href="login.html"]');
+    if (!loginBtn) return;
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loginBtn.innerHTML = '<i class="fas fa-user"></i> Mi cuenta';
+            loginBtn.href = 'account.html';
+        } else {
+            loginBtn.innerHTML = '<i class="fas fa-user"></i> Iniciar sesión';
+            loginBtn.href = 'login.html';
+        }
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
-
-    const miCuentaBtn = document.querySelector('a[href="account.html"]');
-    const currentUser = localStorage.getItem('currentUser');
-
-    if (miCuentaBtn) {
-        if (currentUser) {
-            miCuentaBtn.href = 'account.html';
-        } else {
-            miCuentaBtn.href = 'login.html';
-        }
-    }
-});
+    initAuthUI();
+});

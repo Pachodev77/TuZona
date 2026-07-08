@@ -5,28 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configuración - TuZona</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/profile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-
-        .settings-container { display: flex; gap: 30px; margin-top: 20px; }
-        .settings-sidebar { width: 250px; background: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px 0; }
-        .settings-menu { list-style: none; padding: 0; margin: 0; }
-        .settings-menu a { display: flex; align-items: center; padding: 12px 20px; color: var(--text-color); text-decoration: none; transition: all 0.2s; border-left: 3px solid transparent; }
-        .settings-menu a:hover { background-color: var(--bg-light); color: #3498db; }
-        .settings-menu a.active { border-left-color: #3498db; background-color: #f0f7ff; color: #3498db; font-weight: 500; }
-        .settings-menu i { width: 24px; margin-right: 10px; text-align: center; }
-        .settings-content { flex: 1; background: var(--white); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; }
-        .settings-section { display: none; }
-        .settings-section.active { display: block; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
-        .form-control { width: 100%; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; }
-        .btn-save { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        .btn-save:hover { background-color: #2980b9; }
-        @media (max-width: 768px) {
-            .settings-container { flex-direction: column; }
-            .settings-sidebar { width: 100%; margin-bottom: 20px; }
-        }
     
 </style>
 </head>
@@ -135,10 +115,10 @@
                     <h2>Notificaciones</h2>
                     <form id="notifications-form">
                         <div class="form-group">
-                            <label><input type="checkbox" checked> Notificaciones por correo</label>
+                            <label><input type="checkbox" id="notif-email" checked> Notificaciones por correo</label>
                         </div>
                         <div class="form-group">
-                            <label><input type="checkbox" checked> Notificaciones push</label>
+                            <label><input type="checkbox" id="notif-push" checked> Notificaciones push</label>
                         </div>
                         <button type="submit" class="btn-save">Guardar preferencias</button>
                     </form>
@@ -165,10 +145,10 @@
                     <h2>Privacidad</h2>
                     <form id="privacy-form">
                         <div class="form-group">
-                            <label><input type="checkbox" checked> Perfil público</label>
+                            <label><input type="checkbox" id="privacy-public" checked> Perfil público</label>
                         </div>
                         <div class="form-group">
-                            <label><input type="checkbox" checked> Mostrar correo electrónico</label>
+                            <label><input type="checkbox" id="privacy-show-email" checked> Mostrar correo electrónico</label>
                         </div>
                         <button type="submit" class="btn-save">Guardar preferencias</button>
                     </form>
@@ -177,63 +157,11 @@
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2023 TuZona. Todos los derechos reservados.</p>
-        </div>
-    </footer>
+    <!-- Footer (inyectado desde js/footer.js) -->
+    <footer class="footer" id="site-footer"></footer>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Tab switching
-        const menuLinks = document.querySelectorAll('.settings-menu a');
-        const sections = document.querySelectorAll('.settings-section');
-        
-        menuLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('data-section');
-                
-                // Update active menu item
-                menuLinks.forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Show target section
-                sections.forEach(section => section.classList.remove('active'));
-                document.getElementById(`${targetId}-section`).classList.add('active');
-                
-                // Update URL
-                window.history.pushState({}, '', `#${targetId}`);
-            });
-        });
-        
-        // Load section from URL hash
-        const hash = window.location.hash.substring(1) || 'profile';
-        const targetLink = document.querySelector(`.settings-menu a[data-section="${hash}"]`);
-        if (targetLink) targetLink.click();
-        
-        // Form submissions
-        document.getElementById('profile-form')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Perfil actualizado correctamente');
-        });
-        
-        document.getElementById('notifications-form')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Preferencias de notificaciones guardadas');
-        });
-        
-        document.getElementById('security-form')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Contraseña actualizada correctamente');
-        });
-        
-        document.getElementById('privacy-form')?.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Preferencias de privacidad guardadas');
-        });
-    });
-    </script>
-    <script src="js/main.js"></script>
+    <script type="module" src="js/settings.js"></script>
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/footer.js"></script>
 </body>
 </html>

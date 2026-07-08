@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Favoritos - TuZona</title>
+    <title>Regiones - TuZona</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/legal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -17,7 +18,7 @@
                 </a>
             </div>
             <div class="search-bar">
-                <input type="text" placeholder="¿Qué estás buscando?">
+                <input type="text" id="header-search" placeholder="¿Qué estás buscando?">
                 <button type="submit" class="search-btn">
                     <i class="fas fa-search"></i>
                 </button>
@@ -59,7 +60,6 @@
                 </select>
             </div>
             <div class="user-actions">
-                
                 <button id="theme-toggle" class="theme-toggle" title="Cambiar tema">
                     <i class="fas fa-moon"></i>
                 </button>
@@ -69,52 +69,40 @@
         </div>
     </header>
 
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a href="category.html?category=Vehículos"><i class="fas fa-car"></i> Vehículos</a></li>
+                <li><a href="category.html?category=Inmuebles"><i class="fas fa-home"></i> Inmuebles</a></li>
+                <li><a href="category.html?category=Celulares"><i class="fas fa-mobile-alt"></i> Celulares</a></li>
+                <li><a href="category.html?category=Computación"><i class="fas fa-laptop"></i> Computación</a></li>
+                <li><a href="category.html?category=Moda"><i class="fas fa-tshirt"></i> Moda</a></li>
+                <li><a href="categories.html"><i class="fas fa-ellipsis-h"></i> Más</a></li>
+            </ul>
+        </div>
+    </nav>
+
     <!-- Main Content -->
     <main class="container main-content">
         <div class="page-header">
-            <h1>Mis Favoritos</h1>
+            <h1>Regiones de Colombia</h1>
             <nav class="breadcrumb">
-                <a href="index.html">Inicio</a> > <span>Mis Favoritos</span>
+                <a href="index.html">Inicio</a> &gt; <span>Regiones</span>
             </nav>
         </div>
+        <p class="legal-intro">Busca anuncios por departamento. Selecciona una región para ver los productos y servicios disponibles en esa zona.</p>
 
-        <div class="favorites-container">
-            <div class="filters">
-                <div class="search-box">
-                    <input type="text" placeholder="Buscar en favoritos...">
-                    <button><i class="fas fa-search"></i></button>
-                </div>
-                <div class="sort-options">
-                    <span>Ordenar por:</span>
-                    <select id="sort-favorites">
-                        <option value="recent">Más recientes</option>
-                        <option value="price-asc">Precio: menor a mayor</option>
-                        <option value="price-desc">Precio: mayor a menor</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="favorites-list" id="favorites-list">
-                <!-- Favorites will be loaded here by JavaScript -->
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Cargando tus favoritos...</p>
-                </div>
-            </div>
-
-            <div class="empty-state" id="empty-favorites" style="display: none;">
-                <i class="fas fa-heart"></i>
-                <h3>No tienes favoritos guardados</h3>
-                <p>Guarda tus anuncios favoritos para encontrarlos fácilmente más tarde.</p>
-                <a href="index.html" class="btn">Explorar anuncios</a>
-            </div>
+        <div class="catalog-grid" id="regions-grid">
+            <!-- Las regiones se inyectan desde js/regions.js -->
         </div>
     </main>
 
     <!-- Footer (inyectado desde js/footer.js) -->
     <footer class="footer" id="site-footer"></footer>
 
-    <script type="module" src="js/favorites.js"></script>
+    <script type="module" src="js/regions.js"></script>
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/footer.js"></script>
 </body>

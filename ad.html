@@ -69,21 +69,32 @@
         </div>
     </header>
 
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="index.html"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a href="category.html?category=Vehículos"><i class="fas fa-car"></i> Vehículos</a></li>
+                <li><a href="category.html?category=Inmuebles"><i class="fas fa-home"></i> Inmuebles</a></li>
+                <li><a href="category.html?category=Celulares"><i class="fas fa-mobile-alt"></i> Celulares</a></li>
+                <li><a href="category.html?category=Computación"><i class="fas fa-laptop"></i> Computación</a></li>
+                <li><a href="category.html?category=Moda"><i class="fas fa-tshirt"></i> Moda</a></li>
+                <li><a href="#"><i class="fas fa-ellipsis-h"></i> Más</a></li>
+            </ul>
+        </div>
+    </nav>
+
     <!-- Main Content -->
     <main class="container main-content" id="ad-detail-container">
         <!-- Ad details will be loaded by JavaScript -->
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2023 TuZona - Todos los derechos reservados</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer (inyectado desde js/footer.js) -->
+    <footer class="footer" id="site-footer"></footer>
+
+    <script type="module" src="js/footer.js"></script>
 
     <script type="module" src="js/ad.js"></script>
-    <script src="js/main.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
