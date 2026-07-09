@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* ── Layout desktop ─────────────────────────────── */
+        /* Remove default main-content top padding on this page */
+        .main-content { padding-top: 0 !important; }
+
         .messages-page {
             display: flex;
             gap: 0;
@@ -15,8 +18,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             overflow: hidden;
-            /* Fill the available viewport height minus header + breadcrumb */
-            height: calc(100vh - var(--header-height, 70px) - 120px);
+            /* JS sets --header-height; page-header ~80px; main padding-top ~0 */
+            height: calc(100vh - var(--header-height, 70px) - 130px);
             min-height: 500px;
         }
 
@@ -209,7 +212,6 @@
 
         /* ── MOBILE ─────────────────────────────────────── */
         @media (max-width: 768px) {
-            /* Make the container a single-column switcher */
             .messages-page {
                 flex-direction: column;
                 height: auto;
@@ -217,9 +219,9 @@
                 border-radius: 0;
                 box-shadow: none;
                 background: transparent;
+                gap: 12px;
             }
 
-            /* Conversations list: full width, scrollable, visible by default */
             .conversations-list {
                 width: 100%;
                 max-height: none;
@@ -229,25 +231,22 @@
                 border-radius: 8px;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             }
-
-            /* Hide list when a conversation is open */
             .conversations-list.hidden { display: none; }
 
-            /* Detail panel: hidden by default, shown when conversation is open */
             .message-detail {
                 display: none;
                 background: var(--white);
                 border-radius: 8px;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                /* Fill viewport minus header */
-                height: calc(100vh - var(--header-height, 70px) - 32px);
+                /* page-header ~80px + main padding ~16px */
+                height: calc(100vh - var(--header-height, 70px) - 96px);
             }
             .message-detail.active { display: flex; }
 
-            /* Always show the back button on mobile */
             .message-back { display: block; }
 
-            .messages-page { gap: 12px; }
+            /* Hide the "Mensajes" title on mobile to reclaim vertical space */
+            #messages-page-header { display: none; }
         }
     </style>
 </head>
@@ -310,8 +309,8 @@
         </div>
     </header>
 
-    <main class="container main-content">
-        <div class="page-header">
+    <main class="container main-content" style="padding-bottom: 0;">
+        <div class="page-header" id="messages-page-header">
             <h1>Mensajes</h1>
             <nav class="breadcrumb">
                 <a href="index.html">Inicio</a> &rsaquo; <span>Mensajes</span>
