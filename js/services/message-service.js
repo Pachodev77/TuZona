@@ -14,7 +14,6 @@ import {
     collection,
     query,
     where,
-    orderBy,
     getDocs,
     serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
@@ -65,15 +64,21 @@ export const getOrCreateConversation = async ({ buyerId, buyerName, buyerPhoto, 
 
 /**
  * Get all conversations for a user (most recent first).
+ * Sorted client-side to avoid requiring a composite Firestore index.
  */
 export const getConversations = async (userId) => {
     const q = query(
         collection(db, 'conversations'),
-        where('participants', 'array-contains', userId),
-        orderBy('lastMessageAt', 'desc')
+        where('participants', 'array-contains', userId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    return snapshot.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+            const ta = a.lastMessageAt?.toDate ? a.lastMessageAt.toDate() : new Date(a.lastMessageAt || 0);
+            const tb = b.lastMessageAt?.toDate ? b.lastMessageAt.toDate() : new Date(b.lastMessageAt || 0);
+            return tb - ta;
+        });
 };
 
 /**
