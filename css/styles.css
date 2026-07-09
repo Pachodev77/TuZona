@@ -1097,7 +1097,8 @@ button.btn-publish i {
 
 .footer-logo {
     height: 45px;
-    width: auto;
+    width: 180px;
+    object-fit: fill;
     margin-bottom: 14px;
     border-radius: 6px;
 }
