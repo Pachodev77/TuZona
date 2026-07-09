@@ -104,7 +104,7 @@ img {
 .search-bar {
     flex: 1;
     min-width: 0;
-    max-width: 360px;
+    max-width: 500px;
     display: flex;
     align-items: stretch;
     gap: 0;
@@ -275,6 +275,10 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
     .search-bar select {
         max-width: 90px;
         font-size: 12px;
+    }
+
+    .search-bar input {
+        max-width: 120px;
     }
 
     .user-actions {
