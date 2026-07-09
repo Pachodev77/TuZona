@@ -41,19 +41,6 @@
             border-left: 3px solid #3498db;
         }
         
-        .conversation-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #e0e0e0;
-            margin-right: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: var(--text-light);
-        }
-        
         .conversation-details {
             flex: 1;
         }
@@ -129,17 +116,103 @@
         }
         
         .message {
-            margin-bottom: 15px;
-            max-width: 70%;
+            margin-bottom: 12px;
+            max-width: 75%;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
         }
         
         .message.received {
             margin-right: auto;
+            flex-direction: row;
         }
         
         .message.sent {
             margin-left: auto;
-            text-align: right;
+            flex-direction: row-reverse;
+        }
+
+        .message-body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sent .message-body {
+            align-items: flex-end;
+        }
+
+        .received .message-body {
+            align-items: flex-start;
+        }
+
+        /* Avatar junto al mensaje */
+        .msg-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            overflow: hidden;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .msg-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .msg-avatar-initials {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        /* Avatar en lista de conversaciones */
+        .conversation-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            margin-right: 15px;
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .conv-avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .conv-avatar-initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 18px;
+            font-weight: 600;
+            color: #666;
         }
         
         .message-bubble {

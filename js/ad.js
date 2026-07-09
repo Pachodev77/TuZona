@@ -168,11 +168,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     contactBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Abriendo chat...';
 
                     try {
+                        // Fetch seller's photoURL from their Firestore profile
+                        let sellerPhoto = '';
+                        try {
+                            const sellerDoc = await getDoc(doc(db, 'users', ad.seller.id));
+                            if (sellerDoc.exists()) sellerPhoto = sellerDoc.data().photoURL || '';
+                        } catch (_) {}
+
                         const convId = await getOrCreateConversation({
                             buyerId: user.uid,
                             buyerName: user.displayName || user.email,
+                            buyerPhoto: user.photoURL || '',
                             sellerId: ad.seller.id,
                             sellerName: ad.seller.name || 'Vendedor',
+                            sellerPhoto,
                             adId: ad.id,
                             adTitle: ad.title,
                             adImage: images[0] || ''

@@ -26,7 +26,7 @@ const conversationId = (adId, uidA, uidB) => `${adId}__${[uidA, uidB].sort().joi
  * Get an existing conversation or create a new one.
  * @returns {Promise<string>} The conversation id
  */
-export const getOrCreateConversation = async ({ buyerId, buyerName, sellerId, sellerName, adId, adTitle, adImage }) => {
+export const getOrCreateConversation = async ({ buyerId, buyerName, buyerPhoto, sellerId, sellerName, sellerPhoto, adId, adTitle, adImage }) => {
     const convId = conversationId(adId, buyerId, sellerId);
     const ref = doc(db, 'conversations', convId);
     const snap = await getDoc(ref);
@@ -39,13 +39,26 @@ export const getOrCreateConversation = async ({ buyerId, buyerName, sellerId, se
             adImage: adImage || '',
             participants: [buyerId, sellerId],
             participantInfo: {
-                [buyerId]: { name: buyerName || 'Usuario' },
-                [sellerId]: { name: sellerName || 'Usuario' }
+                [buyerId]: { name: buyerName || 'Usuario', photoURL: buyerPhoto || '' },
+                [sellerId]: { name: sellerName || 'Usuario', photoURL: sellerPhoto || '' }
             },
             lastMessage: '',
             lastMessageAt: serverTimestamp(),
             lastSenderId: ''
         });
+    } else {
+        // Update photoURLs in case they changed since the conversation was created
+        const updates = {};
+        const data = snap.data();
+        if (!data.participantInfo?.[buyerId]?.photoURL && buyerPhoto) {
+            updates[`participantInfo.${buyerId}.photoURL`] = buyerPhoto;
+        }
+        if (!data.participantInfo?.[sellerId]?.photoURL && sellerPhoto) {
+            updates[`participantInfo.${sellerId}.photoURL`] = sellerPhoto;
+        }
+        if (Object.keys(updates).length) {
+            await updateDoc(ref, updates);
+        }
     }
     return convId;
 };

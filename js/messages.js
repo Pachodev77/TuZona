@@ -23,6 +23,7 @@ const deleteConversationBtn = document.getElementById('delete-conversation');
 
 let currentUser = null;
 let currentConversationId = null;
+let currentParticipantInfo = {};
 let messagesUnsub = null;
 let conversationsUnsub = null;
 
@@ -42,6 +43,7 @@ const otherParticipant = (conv) => {
     return {
         uid: otherUid,
         name: info.name || 'Usuario',
+        photoURL: info.photoURL || '',
         avatar: (info.name || 'U').substring(0, 2).toUpperCase()
     };
 };
@@ -62,9 +64,12 @@ const renderConversations = (conversations) => {
     conversationsList.innerHTML = conversations.map(conv => {
         const other = otherParticipant(conv);
         const active = conv.id === currentConversationId ? 'active' : '';
+        const avatarContent = other.photoURL
+            ? `<img src="${other.photoURL}" alt="${other.name}" class="conv-avatar-img" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="conv-avatar-initials" style="display:none">${other.avatar}</span>`
+            : `<span class="conv-avatar-initials">${other.avatar}</span>`;
         return `
             <div class="conversation ${active}" data-conversation-id="${conv.id}">
-                <div class="conversation-avatar">${other.avatar}</div>
+                <div class="conversation-avatar">${avatarContent}</div>
                 <div class="conversation-details">
                     <div class="conversation-header">
                         <span class="conversation-name">${other.name}</span>
@@ -79,6 +84,14 @@ const renderConversations = (conversations) => {
     conversationsList.querySelectorAll('.conversation').forEach(el => {
         el.addEventListener('click', () => openConversation(el.dataset.conversationId, conversations));
     });
+};
+
+const buildAvatar = (info) => {
+    if (info?.photoURL) {
+        return `<img src="${info.photoURL}" alt="${info.name || 'Usuario'}" class="msg-avatar-img" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <span class="msg-avatar-initials" style="display:none">${(info.name || 'U').substring(0, 2).toUpperCase()}</span>`;
+    }
+    return `<span class="msg-avatar-initials">${(info?.name || 'U').substring(0, 2).toUpperCase()}</span>`;
 };
 
 const renderMessages = (messages) => {
@@ -96,10 +109,17 @@ const renderMessages = (messages) => {
 
     messagesContainer.innerHTML = messages.map(msg => {
         const isMe = msg.senderId === currentUser.uid;
+        const senderInfo = currentParticipantInfo[msg.senderId] || {};
+        const avatarHTML = buildAvatar(senderInfo);
+
         return `
             <div class="message ${isMe ? 'sent' : 'received'}">
-                <div class="message-bubble">${msg.text}</div>
-                <div class="message-time">${formatTime(msg.createdAt)}</div>
+                ${!isMe ? `<div class="msg-avatar">${avatarHTML}</div>` : ''}
+                <div class="message-body">
+                    <div class="message-bubble">${msg.text}</div>
+                    <div class="message-time">${formatTime(msg.createdAt)}</div>
+                </div>
+                ${isMe ? `<div class="msg-avatar">${avatarHTML}</div>` : ''}
             </div>`;
     }).join('');
 
@@ -113,14 +133,17 @@ const openConversation = (conversationId, conversations = []) => {
         c.classList.toggle('active', c.dataset.conversationId === conversationId);
     });
 
-    // Update the recipient name in the header
-    if (messageRecipient && currentUser) {
+    // Update the recipient name in the header and store participantInfo for rendering
+    if (currentUser) {
         const conv = conversations.find(c => c.id === conversationId);
         if (conv) {
-            const otherUid = (conv.participants || []).find(uid => uid !== currentUser.uid);
-            const name = conv.participantInfo?.[otherUid]?.name || 'Usuario';
-            const adTitle = conv.adTitle ? ` · ${conv.adTitle}` : '';
-            messageRecipient.textContent = name + adTitle;
+            currentParticipantInfo = conv.participantInfo || {};
+            if (messageRecipient) {
+                const otherUid = (conv.participants || []).find(uid => uid !== currentUser.uid);
+                const name = currentParticipantInfo[otherUid]?.name || 'Usuario';
+                const adTitle = conv.adTitle ? ` · ${conv.adTitle}` : '';
+                messageRecipient.textContent = name + adTitle;
+            }
         }
     }
 
