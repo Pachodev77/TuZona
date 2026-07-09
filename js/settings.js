@@ -88,12 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (notificationsForm) {
             notificationsForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const settings = {
-                    emailNotifications: document.getElementById('notif-email')?.checked ?? true,
-                    notifications: document.getElementById('notif-push')?.checked ?? true
-                };
                 try {
-                    await updateUserSettings(user.uid, settings);
+                    await updateDoc(doc(db, 'users', user.uid), {
+                        'settings.emailNotifications': document.getElementById('notif-email')?.checked ?? true,
+                        'settings.notifications': document.getElementById('notif-push')?.checked ?? true
+                    });
                     showAlert('Preferencias de notificaciones guardadas', 'success');
                 } catch (err) {
                     showAlert('Error al guardar preferencias', 'error');
@@ -127,12 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (privacyForm) {
             privacyForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const settings = {
-                    publicProfile: document.getElementById('privacy-public')?.checked ?? true,
-                    showEmail: document.getElementById('privacy-show-email')?.checked ?? false
-                };
                 try {
-                    await updateUserSettings(user.uid, settings);
+                    await updateDoc(doc(db, 'users', user.uid), {
+                        'settings.publicProfile': document.getElementById('privacy-public')?.checked ?? true,
+                        'settings.showEmail': document.getElementById('privacy-show-email')?.checked ?? false
+                    });
                     showAlert('Preferencias de privacidad guardadas', 'success');
                 } catch (err) {
                     showAlert('Error al guardar preferencias', 'error');

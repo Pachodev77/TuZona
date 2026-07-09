@@ -174,21 +174,23 @@
                             <div class="stat-icon"><i class="fas fa-envelope"></i></div>
                             <div class="stat-info">
                                 <h3>Mensajes Nuevos</h3>
-                                <p class="stat-number">0</p>
+                                <p id="unread-messages" class="stat-number">0</p>
                             </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon"><i class="fas fa-star"></i></div>
+                            <div class="stat-icon"><i class="fas fa-heart"></i></div>
                             <div class="stat-info">
-                                <h3>Valoración</h3>
-                                <p class="stat-number">0.0 <small>/ 5.0</small></p>
+                                <h3>Favoritos</h3>
+                                <p id="total-favorites" class="stat-number">0</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="recent-activity">
                         <h3>Actividad Reciente</h3>
-                        <p style="color: var(--text-light); padding: 1rem 0;">No hay actividad reciente para mostrar.</p>
+                        <div id="recent-activity-list">
+                            <p style="color: var(--text-light); padding: 1rem 0;">Cargando actividad reciente...</p>
+                        </div>
                     </div>
                 </section>
 

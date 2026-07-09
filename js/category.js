@@ -35,7 +35,8 @@ const displayCategoryAds = async () => {
         
         querySnapshot.forEach((doc) => {
             const adData = doc.data();
-            // Optional: Filter active ads here if needed: if(adData.status !== 'active') return;
+            // Only show active ads
+            if (adData.status !== 'active') return;
             ads.push({
                 id: doc.id,
                 ...adData,

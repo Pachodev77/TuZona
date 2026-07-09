@@ -1,5 +1,7 @@
 import { getCurrentUserProfile, updateUserProfile, uploadUserAvatar } from './services/user-service.js';
 import { AdService } from './services/ad-service.js';
+import { getConversations } from './services/message-service.js';
+import { getFavorites } from './services/favorites-service.js';
 import { signOut, auth } from './auth.js';
 import { showError, showSuccess } from './ui-helpers.js';
 
@@ -42,6 +44,25 @@ async function initAccount(user) {
         console.error('Error loading ads:', error);
         showError('Error al cargar tus anuncios');
     }
+
+    // Load dashboard counters in parallel (non-blocking)
+    Promise.allSettled([
+        getConversations(user.uid),
+        getFavorites(user.uid)
+    ]).then(([convsResult, favsResult]) => {
+        if (convsResult.status === 'fulfilled') {
+            const unread = convsResult.value.filter(c => c.lastSenderId && c.lastSenderId !== user.uid).length;
+            const el = document.getElementById('unread-messages');
+            if (el) el.textContent = unread;
+        }
+        if (favsResult.status === 'fulfilled') {
+            const el = document.getElementById('total-favorites');
+            if (el) el.textContent = favsResult.value.length;
+        }
+    });
+
+    // Recent activity: last 5 ads sorted by date
+    renderRecentActivity(currentAds);
 }
 
 function renderProfile(profile) {
@@ -71,6 +92,39 @@ function renderStats(ads) {
     set('total-ads', total);
     set('active-ads', active);
     set('pending-ads', pending);
+}
+
+function renderRecentActivity(ads) {
+    const container = document.getElementById('recent-activity-list');
+    if (!container) return;
+
+    if (!ads.length) {
+        container.innerHTML = '<p style="color:var(--text-light);padding:1rem 0;">No hay actividad reciente para mostrar.</p>';
+        return;
+    }
+
+    const recent = [...ads]
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .slice(0, 5);
+
+    container.innerHTML = recent.map(ad => {
+        const date = ad.createdAt
+            ? new Date(ad.createdAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+            : 'Fecha desconocida';
+        const statusColors = { active: '#27ae60', pending: '#f39c12', sold: '#2980b9', inactive: '#95a5a6' };
+        const statusLabels = { active: 'Activo', pending: 'Pendiente', sold: 'Vendido', inactive: 'Inactivo' };
+        const color = statusColors[ad.status] || '#95a5a6';
+        const label = statusLabels[ad.status] || ad.status;
+        return `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-color);">
+                <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+                <div style="flex:1;min-width:0;">
+                    <a href="ad.html?id=${ad.id}" style="font-weight:500;color:var(--text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${ad.title || 'Sin título'}</a>
+                    <span style="font-size:12px;color:var(--text-light);">${date}</span>
+                </div>
+                <span style="font-size:12px;color:${color};font-weight:500;flex-shrink:0;">${label}</span>
+            </div>`;
+    }).join('');
 }
 
 function setupProfileForm(profile) {

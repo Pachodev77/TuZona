@@ -25,7 +25,6 @@ const matchesRegion = (ad, region) => {
     const regionLower = region.trim().toLowerCase();
     return location.includes(regionLower) || regionLower.includes(location.split(',')[0] || '');
 };
-};
 
 const displaySearchResults = (allAds, query = '', region = '') => {
     const filtered = allAds.filter(ad => matchesQuery(ad, query) && matchesRegion(ad, region));
