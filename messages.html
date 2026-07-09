@@ -210,76 +210,56 @@
         .loading-spinner { padding:30px;text-align:center;color:var(--text-light); }
         .loading-spinner i { font-size:24px;display:block;margin-bottom:8px; }
 
+        /* Composer hidden by default, shown via JS */
+        .hidden-form { display: none !important; }
+
         /* ── MOBILE ─────────────────────────────────────── */
         @media (max-width: 768px) {
             .main-content { padding: 0 !important; }
             #messages-page-header { display: none; }
+            .messages-page { display: block; height: auto; min-height: unset; }
 
-            .messages-page {
-                height: auto;
-                min-height: unset;
-                border-radius: 0;
-                box-shadow: none;
-                background: transparent;
-                display: block;
-            }
-
-            /* Conversations list: full-screen fixed, scrollable */
+            /* Lista: flujo normal — NO fixed, el footer sigue accesible */
             .conversations-list {
-                position: fixed;
-                top: var(--header-height, 120px);
-                left: 0;
-                right: 0;
-                bottom: 0;
+                position: static;
                 width: 100%;
-                border-right: none;
-                border-radius: 0;
-                box-shadow: none;
+                border-right: none; border-radius: 0;
                 background: var(--white);
-                overflow-y: auto;
-                z-index: 10;
+                overflow-y: visible;
             }
-            .conversations-list.hidden { display: none; }
+            .conversations-list.hidden { display: none !important; }
 
-            /* Chat detail: full-screen fixed, flex column */
+            /* Chat abierto: fixed, cubre toda la pantalla bajo el header */
             .message-detail {
-                position: fixed;
-                top: var(--header-height, 120px);
-                left: 0;
-                right: 0;
-                bottom: 0;
+                position: fixed !important;
+                top: var(--header-height, 120px) !important;
+                left: 0 !important; right: 0 !important; bottom: 0 !important;
                 display: none;
-                flex-direction: column;
+                flex-direction: column !important;
                 background: var(--white);
-                border-radius: 0;
-                box-shadow: none;
-                z-index: 20;
-                height: calc(100vh - var(--header-height, 120px));
-                overflow: hidden;
+                z-index: 200;
+                overflow: hidden !important;
             }
-            .message-detail.active { display: flex; }
+            .message-detail.active { display: flex !important; }
 
-            /* Chat header: fixed height, never shrinks */
-            .message-detail .message-header {
-                flex-shrink: 0;
-            }
+            /* Cuando el chat está abierto bloquear scroll del body */
+            body.chat-open { overflow: hidden; }
 
-            /* Messages bubble area: fills ALL remaining space, scrolls internally */
+            .message-detail .message-header { flex: 0 0 auto !important; }
+
             .message-detail .messages {
-                flex: 1 1 0;
-                min-height: 0;      /* crucial for flex overflow to work */
-                overflow-y: auto;
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch;
             }
 
-            /* Composer: fixed at bottom, never shrinks */
             .message-detail .message-composer {
-                flex-shrink: 0;
-                padding: 10px 12px;
-                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                flex: 0 0 auto !important;
+                padding: 10px 12px !important;
             }
 
-            .message-back { display: block; }
+            .message-back { display: block !important; }
         }
     </style>
 </head>
@@ -385,7 +365,7 @@
                     </div>
                 </div>
 
-                <form class="message-composer" id="message-form" style="display:none;">
+                <form class="message-composer hidden-form" id="message-form">
                     <div class="composer-input-row">
                         <textarea
                             class="composer-input"

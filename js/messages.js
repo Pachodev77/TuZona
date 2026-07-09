@@ -209,12 +209,11 @@ const openConversation = (conversationId) => {
         }
     );
 
-    if (messageForm) messageForm.style.display = 'flex';
-
-    // Mobile: hide list, show detail
+    if (messageForm) messageForm.classList.remove('hidden-form');
     if (window.innerWidth <= 768) {
         if (conversationsList) conversationsList.classList.add('hidden');
         if (messageDetail) messageDetail.classList.add('active');
+        document.body.classList.add('chat-open');
     }
 };
 
@@ -227,11 +226,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show list, hide detail (mobile)
             if (conversationsList) conversationsList.classList.remove('hidden');
             if (messageDetail) messageDetail.classList.remove('active');
+            document.body.classList.remove('chat-open');
             // Cancel messages listener when going back — reopen will re-subscribe
             if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
             currentConversationId = null;
             currentParticipantInfo = {};
-            if (messageForm) messageForm.style.display = 'none';
+            if (messageForm) messageForm.classList.add('hidden-form');
             if (messageRecipient) messageRecipient.textContent = 'Selecciona una conversación';
             // Clear active highlight
             document.querySelectorAll('.conversation').forEach(c => c.classList.remove('active'));
