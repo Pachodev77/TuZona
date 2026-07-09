@@ -104,7 +104,7 @@ img {
 .search-bar {
     flex: 1;
     min-width: 0;
-    max-width: 500px;
+    max-width: 360px;
     display: flex;
     align-items: stretch;
     gap: 0;
@@ -396,6 +396,23 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
 .btn:hover {
     background-color: var(--primary-dark);
     transform: translateY(-2px);
+}
+
+/* Override .btn rules for icon-only buttons — must come AFTER .btn */
+a.btn-publish,
+button.btn-publish {
+    padding: 0 !important;
+}
+a.btn-publish i,
+button.btn-publish i {
+    margin: 0 !important;
+}
+/* Compact login button in header */
+.user-actions a.btn,
+.user-actions button.btn {
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    height: 38px !important;
 }
 
 .btn-outline {

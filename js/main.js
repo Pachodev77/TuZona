@@ -58,9 +58,9 @@ const initAuthUI = () => {
                 : `<span class="header-avatar-initials">${initials}</span>`;
         } else {
             loginBtn.href = 'login.html';
-            loginBtn.className = 'btn';
-            loginBtn.title = '';
-            loginBtn.innerHTML = '<i class="fas fa-user"></i> Iniciar sesión';
+            loginBtn.className = 'header-avatar-btn';
+            loginBtn.title = 'Iniciar sesión';
+            loginBtn.innerHTML = '<i class="fas fa-user"></i>';
         }
     });
 };
