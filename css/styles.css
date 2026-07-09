@@ -805,6 +805,27 @@ img {
     margin-bottom: 30px;
 }
 
+@media (max-width: 768px) {
+    .footer-content {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    /* Primera sección (logo + descripción) ocupa toda la fila */
+    .footer-section:first-child {
+        grid-column: 1 / -1;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 16px;
+        margin-bottom: 4px;
+    }
+
+    .footer-section h3 { font-size: 15px; margin-bottom: 12px; }
+    .footer-section h4 { font-size: 13px; margin-bottom: 10px; }
+    .footer-section p  { font-size: 12px; }
+    .footer-section ul li { margin-bottom: 7px; }
+    .footer-section a  { font-size: 12px; }
+}
+
 .footer-section h3 {
     color: var(--white);
     margin-bottom: 20px;
