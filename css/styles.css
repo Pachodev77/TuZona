@@ -348,6 +348,7 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
     transform: translateY(-2px);
     color: #fff;
 }
+.btn-publish i { margin: 0; }
 
 .btn {
     display: inline-flex;
