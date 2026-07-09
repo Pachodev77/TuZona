@@ -43,13 +43,24 @@ const initAuthUI = () => {
     const loginBtn = userActions.querySelector('a[href="login.html"]');
     if (!loginBtn) return;
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
-            loginBtn.innerHTML = '<i class="fas fa-user"></i> Mi cuenta';
+            // Build avatar — photo if available, else initials
+            const photo = user.photoURL;
+            const name = user.displayName || user.email || 'U';
+            const initials = name.substring(0, 2).toUpperCase();
+
             loginBtn.href = 'account.html';
+            loginBtn.className = 'header-avatar-btn';
+            loginBtn.title = name;
+            loginBtn.innerHTML = photo
+                ? `<img src="${photo}" alt="${initials}" class="header-avatar-img" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="header-avatar-initials" style="display:none">${initials}</span>`
+                : `<span class="header-avatar-initials">${initials}</span>`;
         } else {
-            loginBtn.innerHTML = '<i class="fas fa-user"></i> Iniciar sesión';
             loginBtn.href = 'login.html';
+            loginBtn.className = 'btn';
+            loginBtn.title = '';
+            loginBtn.innerHTML = '<i class="fas fa-user"></i> Iniciar sesión';
         }
     });
 };

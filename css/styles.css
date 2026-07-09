@@ -285,9 +285,48 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
     }
 }
 
-/* ============================================================
-   Buttons
-   ============================================================ */
+/* Header avatar button (replaces "Mi cuenta" when logged in) */
+.header-avatar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--primary-color);
+    background: var(--primary-light);
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.header-avatar-btn:hover {
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 3px rgba(76,175,80,0.25);
+    transform: none;
+}
+.header-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+.header-avatar-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border-radius: 50%;
+    user-select: none;
+}
+
+
 .btn {
     display: inline-flex;
     align-items: center;
