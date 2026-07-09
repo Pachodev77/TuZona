@@ -354,7 +354,12 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
 }
 .btn-publish i { margin: 0; font-size: 18px; }
 
-/* Logout button variant */
+/* Header auth button - compact to stay in line with icon buttons */
+.user-actions .btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    height: 38px;
+}
 .btn-logout {
     background-color: transparent;
     border: 2px solid var(--danger);
