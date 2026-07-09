@@ -46,7 +46,32 @@ const initAuthUI = () => {
     });
 };
 
+/**
+ * Keeps --header-height in sync with the actual rendered header height.
+ * This allows every page to use padding-top: var(--header-height) without
+ * hardcoding a pixel value that breaks when the header wraps on small screens.
+ */
+const initHeaderHeightVar = () => {
+    const header = document.querySelector('.header');
+    if (!header) return;
+
+    const update = () => {
+        document.documentElement.style.setProperty(
+            '--header-height',
+            header.offsetHeight + 'px'
+        );
+    };
+
+    // Run immediately, then watch for resize (e.g. search bar wraps on mobile)
+    update();
+    window.addEventListener('resize', update);
+
+    // Also re-measure after fonts/images may have shifted the header
+    window.addEventListener('load', update);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
     initAuthUI();
+    initHeaderHeightVar();
 });

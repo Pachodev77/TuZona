@@ -19,6 +19,25 @@
     --transition: all 0.3s ease;
     --danger: #e74c3c;
     --danger-dark: #c0392b;
+    /* Set by JS (main.js) to match the real sticky header height */
+    --header-height: 70px;
+}
+
+/* Offset anchor targets so the sticky header doesn't cover them */
+html {
+    scroll-padding-top: var(--header-height);
+}
+
+/* ============================================================
+   Main Content & Sections
+   ============================================================ */
+.main-content {
+    padding: 2rem 0;
+    /* Reserve space equal to the sticky header so content is never hidden */
+    scroll-margin-top: var(--header-height);
+    min-height: calc(100vh - 320px);
+    position: relative;
+    z-index: 1;
 }
 
 * {
@@ -326,16 +345,6 @@ img {
     .main-nav ul {
         gap: 5px;
     }
-}
-
-/* ============================================================
-   Main Content & Sections
-   ============================================================ */
-.main-content {
-    padding: 2rem 0;
-    min-height: calc(100vh - 320px);
-    position: relative;
-    z-index: 1;
 }
 
 .section-header {
