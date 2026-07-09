@@ -107,7 +107,7 @@ img {
     max-width: 500px;
     display: flex;
     align-items: stretch;
-    gap: 0;
+    gap: 6px;
 }
 
 /* User actions: always on one line, never wrap */
@@ -139,8 +139,7 @@ img {
     flex: 1;
     padding: 0 12px;
     border: 1px solid var(--border-color);
-    border-right: none;
-    border-radius: 4px 0 0 4px;
+    border-radius: 4px;
     font-size: 14px;
     outline: none;
     height: 38px;
@@ -149,7 +148,7 @@ img {
 
 .search-bar select {
     border: 1px solid var(--border-color);
-    border-right: none;
+    border-radius: 4px;
     padding: 0 8px;
     font-size: 14px;
     background-color: var(--bg-light);
@@ -163,7 +162,7 @@ img {
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 0 4px 4px 0;
+    border-radius: 4px;
     padding: 0 16px;
     cursor: pointer;
     display: flex;
@@ -273,12 +272,12 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
     }
 
     .search-bar select {
-        max-width: 90px;
+        max-width: 130px;
         font-size: 12px;
     }
 
     .search-bar input {
-        max-width: 120px;
+        max-width: 260px;
     }
 
     .user-actions {
