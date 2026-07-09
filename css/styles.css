@@ -91,17 +91,32 @@ img {
 
 .header-content {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
-    gap: 15px;
+    gap: 12px;
     padding: 4px 15px;
 }
 
-.logo {
+.logo { flex-shrink: 0; }
+
+/* Search bar takes available space but doesn't push actions off screen */
+.search-bar {
+    flex: 1;
+    min-width: 0;
+    max-width: 500px;
     display: flex;
+    align-items: stretch;
+    gap: 0;
+}
+
+/* User actions: always on one line, never wrap */
+.user-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
     align-items: center;
-    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .logo-link {
@@ -120,16 +135,6 @@ img {
     border-radius: 8px;
 }
 
-/* Search Bar */
-.search-bar {
-    flex: 1;
-    max-width: 600px;
-    display: flex;
-    min-width: 200px;
-    align-items: stretch;
-    gap: 0;
-}
-
 .search-bar input {
     flex: 1;
     padding: 0 12px;
@@ -139,7 +144,7 @@ img {
     font-size: 14px;
     outline: none;
     height: 38px;
-    min-width: 120px;
+    min-width: 0;
 }
 
 .search-bar select {
@@ -149,7 +154,7 @@ img {
     font-size: 14px;
     background-color: var(--bg-light);
     cursor: pointer;
-    min-width: 140px;
+    min-width: 100px;
     outline: none;
     height: 38px;
 }
@@ -165,20 +170,12 @@ img {
     align-items: center;
     justify-content: center;
     height: 38px;
+    flex-shrink: 0;
     transition: var(--transition);
 }
 
 .search-bar .search-btn:hover {
     background-color: var(--primary-dark);
-}
-
-/* User Actions */
-.user-actions {
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0;
-    align-items: center;
-    white-space: nowrap;
 }
 
 /* ── Theme toggle switch ──────────────────────────────────── */
@@ -248,19 +245,24 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
 /* Header Responsive */
 @media (max-width: 992px) {
     .header-content {
-        flex-direction: row;
         flex-wrap: wrap;
+    }
+
+    /* Row 1: logo + user-actions */
+    .logo { order: 1; }
+    .user-actions { order: 2; margin-left: auto; }
+
+    /* Row 2: search-bar full width */
+    .search-bar {
+        order: 3;
+        flex: 1 1 100%;
+        max-width: 100%;
+        margin-top: 4px;
     }
 
     .logo-img {
         height: 54px;
         width: 210px;
-    }
-
-    .search-bar {
-        order: 3;
-        flex: 1 1 100%;
-        margin-top: 5px;
     }
 }
 
@@ -271,16 +273,16 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
     }
 
     .search-bar select {
-        max-width: 100px;
+        max-width: 90px;
         font-size: 12px;
     }
 
     .user-actions {
-        gap: 5px;
+        gap: 6px;
     }
 
     .user-actions .btn {
-        padding: 8px 10px;
+        padding: 7px 10px;
         font-size: 13px;
     }
 }
@@ -326,6 +328,26 @@ html[data-theme="dark"] .theme-toggle .toggle-icon {
     user-select: none;
 }
 
+/* Publish button — icon only, circular */
+.btn-publish {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+.btn-publish:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    color: #fff;
+}
 
 .btn {
     display: inline-flex;
