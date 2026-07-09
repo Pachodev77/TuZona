@@ -11,14 +11,14 @@ const initDarkMode = () => {
         if (theme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             if (icon) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
             }
         } else {
             document.documentElement.removeAttribute('data-theme');
             if (icon) {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
             }
         }
     };
@@ -45,10 +45,20 @@ const initAuthUI = () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            // Build avatar — photo if available, else initials
-            const photo = user.photoURL;
             const name = user.displayName || user.email || 'U';
             const initials = name.substring(0, 2).toUpperCase();
+
+            // Try to get photoURL from Firestore profile first, fall back to Auth
+            let photo = user.photoURL || '';
+            try {
+                const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js');
+                const { app } = await import('./firebase-config.js');
+                const db = getFirestore(app);
+                const snap = await getDoc(doc(db, 'users', user.uid));
+                if (snap.exists() && snap.data().photoURL) {
+                    photo = snap.data().photoURL;
+                }
+            } catch (_) {}
 
             loginBtn.href = 'account.html';
             loginBtn.className = 'header-avatar-btn';
