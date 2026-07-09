@@ -82,7 +82,7 @@ img {
 .header {
     background-color: var(--white);
     box-shadow: var(--box-shadow);
-    padding: 10px 0;
+    padding: 6px 0;
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -95,7 +95,7 @@ img {
     align-items: center;
     justify-content: space-between;
     gap: 15px;
-    padding: 5px 15px;
+    padding: 4px 15px;
 }
 
 .logo {
@@ -111,10 +111,12 @@ img {
 }
 
 .logo-img {
-    height: 45px;
-    width: auto;
+    height: 60px;
+    width: 240px;
+    object-fit: fill;
     margin: 0;
     padding: 0;
+    display: block;
 }
 
 /* Search Bar */
@@ -203,7 +205,8 @@ img {
     }
 
     .logo-img {
-        height: 40px;
+        height: 54px;
+        width: 210px;
     }
 
     .search-bar {
@@ -215,7 +218,8 @@ img {
 
 @media (max-width: 576px) {
     .logo-img {
-        height: 36px;
+        height: 48px;
+        width: 180px;
     }
 
     .search-bar select {
