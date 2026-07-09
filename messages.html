@@ -212,41 +212,75 @@
 
         /* ── MOBILE ─────────────────────────────────────── */
         @media (max-width: 768px) {
+            .main-content { padding: 0 !important; }
+            #messages-page-header { display: none; }
+
             .messages-page {
-                flex-direction: column;
                 height: auto;
                 min-height: unset;
                 border-radius: 0;
                 box-shadow: none;
                 background: transparent;
-                gap: 12px;
+                display: block;
             }
 
+            /* Conversations list: full-screen fixed, scrollable */
             .conversations-list {
+                position: fixed;
+                top: var(--header-height, 70px);
+                left: 0;
+                right: 0;
+                bottom: 0;
                 width: 100%;
-                max-height: none;
                 border-right: none;
-                border-bottom: 1px solid var(--border-color);
+                border-radius: 0;
+                box-shadow: none;
                 background: var(--white);
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                overflow-y: auto;
+                z-index: 10;
             }
             .conversations-list.hidden { display: none; }
 
+            /* Chat detail: full-screen fixed, flex column */
             .message-detail {
+                position: fixed;
+                top: var(--header-height, 70px);
+                left: 0;
+                right: 0;
+                bottom: 0;
                 display: none;
+                flex-direction: column;
                 background: var(--white);
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                /* page-header ~80px + main padding ~16px */
-                height: calc(100vh - var(--header-height, 70px) - 96px);
+                border-radius: 0;
+                box-shadow: none;
+                z-index: 20;
+                /* Critical: explicit height so flex children can fill it */
+                height: calc(100vh - var(--header-height, 70px));
+                overflow: hidden;
             }
             .message-detail.active { display: flex; }
 
-            .message-back { display: block; }
+            /* Chat header: fixed height, never shrinks */
+            .message-detail .message-header {
+                flex-shrink: 0;
+            }
 
-            /* Hide the "Mensajes" title on mobile to reclaim vertical space */
-            #messages-page-header { display: none; }
+            /* Messages bubble area: fills ALL remaining space, scrolls internally */
+            .message-detail .messages {
+                flex: 1 1 0;
+                min-height: 0;      /* crucial for flex overflow to work */
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Composer: fixed at bottom, never shrinks */
+            .message-detail .message-composer {
+                flex-shrink: 0;
+                padding: 10px 12px;
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+            }
+
+            .message-back { display: block; }
         }
     </style>
 </head>
