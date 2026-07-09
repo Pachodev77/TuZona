@@ -1,5 +1,5 @@
 import { AdService } from './services/ad-service.js';
-import { formatRelativeDate, createAdCard } from './ui-helpers.js';
+import { formatRelativeDate, createAdCard, initSlideshows } from './ui-helpers.js';
 
 // DOM Elements
 const regionAdsContainer = document.getElementById('region-ads');
@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             regionAdsContainer.innerHTML = '<p class="no-results">No hay anuncios en esta región.</p>';
         } else {
             regionAdsContainer.innerHTML = filtered.map(createAdCard).join('');
+            initSlideshows();
         }
     } catch (error) {
         console.error('Error al cargar anuncios de la región:', error);

@@ -1,6 +1,6 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
-import { formatRelativeDate, createAdCard } from './ui-helpers.js';
+import { formatRelativeDate, createAdCard, initSlideshows } from './ui-helpers.js';
 
 // DOM Elements
 const categoryAdsContainer = document.getElementById('category-ads');
@@ -54,9 +54,8 @@ const displayCategoryAds = async () => {
         if (categoryAdsContainer) {
             categoryAdsContainer.innerHTML = '';
             if (ads.length > 0) {
-                ads.forEach(ad => {
-                    categoryAdsContainer.innerHTML += createAdCard(ad);
-                });
+                categoryAdsContainer.innerHTML = ads.map(createAdCard).join('');
+                initSlideshows();
             } else {
                 categoryAdsContainer.innerHTML = '<p class="no-results">No hay anuncios en esta categoría.</p>';
             }

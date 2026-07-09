@@ -1,7 +1,7 @@
 // Reuse the single Firebase instance configured in firebase-config.js
 import { db } from './firebase-config.js';
 import { collection, getDocs, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
-import { formatRelativeDate, createAdCard } from './ui-helpers.js';
+import { formatRelativeDate, createAdCard, initSlideshows } from './ui-helpers.js';
 
 // Function to get ads from Firestore
 const getAds = async (featured = false, limitCount = 20) => {
@@ -81,6 +81,7 @@ const displayAds = async () => {
             if (featuredAds.length > 0) {
                 featuredContainer.innerHTML = featuredAds.map(createAdCard).join('');
                 if (featuredSection) featuredSection.style.display = '';
+                initSlideshows();
             } else {
                 // No featured ads — hide the entire section
                 if (featuredSection) featuredSection.style.display = 'none';
@@ -91,10 +92,8 @@ const displayAds = async () => {
         // Display recent ads if container exists
         if (recentContainer) {
             if (recentAds.length > 0) {
-                recentContainer.innerHTML = '';
-                recentAds.forEach(ad => {
-                    recentContainer.innerHTML += createAdCard(ad);
-                });
+                recentContainer.innerHTML = recentAds.map(createAdCard).join('');
+                initSlideshows();
             } else {
                 recentContainer.innerHTML = '<p class="no-ads">No hay anuncios recientes.</p>';
             }

@@ -229,19 +229,30 @@ export function formatRelativeDate(value) {
 /**
  * Build the HTML for a standard ad card used in listing grids
  * (home, search, category and region results).
+ * If the ad has multiple images, the card auto-slides through them on hover.
  * @param {Object} ad - Ad document (must include id)
  * @returns {string}
  */
 export function createAdCard(ad) {
-    const imageUrl = Array.isArray(ad.images) && ad.images.length > 0
-        ? ad.images[0]
-        : (ad.image || 'images/placeholder.jpg');
+    const images = Array.isArray(ad.images) && ad.images.length > 0
+        ? ad.images
+        : [ad.image || 'images/placeholder.jpg'];
+
+    const hasSlideshow = images.length > 1;
+    const imagesAttr = hasSlideshow ? `data-images='${JSON.stringify(images)}'` : '';
+
+    const dotsHTML = hasSlideshow
+        ? `<div class="ad-slide-dots">${images.map((_, i) =>
+            `<span class="ad-slide-dot${i === 0 ? ' active' : ''}"></span>`
+          ).join('')}</div>`
+        : '';
 
     return `
-        <a href="ad.html?id=${ad.id}" class="ad-card" data-id="${ad.id}">
+        <a href="ad.html?id=${ad.id}" class="ad-card${hasSlideshow ? ' has-slideshow' : ''}" data-id="${ad.id}" ${imagesAttr}>
             <div class="ad-image">
-                <img src="${imageUrl}" alt="${ad.title}" onerror="this.src='images/placeholder.jpg'">
+                <img src="${images[0]}" alt="${ad.title}" onerror="this.src='images/placeholder.jpg'" class="ad-slide-img">
                 <div class="ad-price">${formatPrice(ad.price)}</div>
+                ${dotsHTML}
             </div>
             <div class="ad-details">
                 <h3 class="ad-title">${ad.title}</h3>
@@ -256,6 +267,53 @@ export function createAdCard(ad) {
             </div>
         </a>
     `;
+}
+
+/**
+ * Initialise auto-slideshow on all .has-slideshow cards in the document.
+ * Call this once after inserting cards into the DOM.
+ * Each card cycles through its images every 2s while the mouse is over it.
+ */
+export function initSlideshows() {
+    document.querySelectorAll('.ad-card.has-slideshow').forEach(card => {
+        // Avoid double-initialising
+        if (card.dataset.slideshowInit) return;
+        card.dataset.slideshowInit = '1';
+
+        let images;
+        try { images = JSON.parse(card.dataset.images); } catch { return; }
+
+        const img   = card.querySelector('.ad-slide-img');
+        const dots  = card.querySelectorAll('.ad-slide-dot');
+        let idx     = 0;
+        let timer   = null;
+
+        const goTo = (n) => {
+            idx = (n + images.length) % images.length;
+            img.src = images[idx];
+            dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        };
+
+        const start = () => {
+            if (timer) return;
+            timer = setInterval(() => goTo(idx + 1), 2000);
+        };
+
+        const stop = () => {
+            clearInterval(timer);
+            timer = null;
+            goTo(0);
+        };
+
+        card.addEventListener('mouseenter', start);
+        card.addEventListener('mouseleave', stop);
+        // Touch: tap cycles to next image instead of following the link
+        card.addEventListener('touchstart', (e) => {
+            if (images.length < 2) return;
+            e.preventDefault();
+            goTo(idx + 1);
+        }, { passive: false });
+    });
 }
 
 /**

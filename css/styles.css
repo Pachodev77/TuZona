@@ -969,8 +969,7 @@ button.btn-publish i {
 
 /* ============================================================
    Ads Grid & Cards
-   ============================================================ */
-.ads-grid {
+   ============================================================ */.ads-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 20px;
@@ -1012,6 +1011,32 @@ button.btn-publish i {
     padding: 5px 10px;
     border-radius: 4px;
     font-weight: bold;
+}
+
+/* Slideshow dots */
+.ad-slide-dots {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+.ad-slide-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.ad-slide-dot.active {
+    background: #fff;
+}
+
+/* Smooth image transition */
+.ad-slide-img {
+    transition: opacity 0.3s ease;
 }
 
 .ad-details {

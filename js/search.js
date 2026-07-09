@@ -1,5 +1,5 @@
 import { AdService } from './services/ad-service.js';
-import { formatRelativeDate, createAdCard } from './ui-helpers.js';
+import { formatRelativeDate, createAdCard, initSlideshows } from './ui-helpers.js';
 
 // DOM Elements
 const searchAdsContainer = document.getElementById('search-ads');
@@ -45,6 +45,7 @@ const displaySearchResults = (allAds, query = '', region = '') => {
     }
 
     searchAdsContainer.innerHTML = filtered.map(createAdCard).join('');
+    initSlideshows();
 };
 
 document.addEventListener('DOMContentLoaded', async () => {

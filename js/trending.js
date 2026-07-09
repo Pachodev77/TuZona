@@ -7,7 +7,7 @@
  */
 
 import { AdService } from './services/ad-service.js';
-import { createAdCard } from './ui-helpers.js';
+import { createAdCard, initSlideshows } from './ui-helpers.js';
 
 const container = document.getElementById('trending-ads');
 
@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         container.innerHTML = ads.map(createAdCard).join('');
+        initSlideshows();
     } catch (error) {
         console.error('Error al cargar tendencias:', error);
         container.innerHTML = `
