@@ -60,9 +60,10 @@ const displayAds = async () => {
     }
 
     try {
-        // Show loading states for existing containers
+        // Hide featured section by default while loading — shown only if there are featured ads
         if (featuredContainer) {
-            featuredContainer.innerHTML = '<div class="loading">Cargando anuncios destacados...</div>';
+            const featuredSection = featuredContainer.closest('section');
+            if (featuredSection) featuredSection.style.display = 'none';
         }
         if (recentContainer) {
             recentContainer.innerHTML = '<div class="loading">Cargando anuncios recientes...</div>';
@@ -76,13 +77,14 @@ const displayAds = async () => {
 
         // Display featured ads if container exists
         if (featuredContainer) {
+            const featuredSection = featuredContainer.closest('section');
             if (featuredAds.length > 0) {
-                featuredContainer.innerHTML = '';
-                featuredAds.forEach(ad => {
-                    featuredContainer.innerHTML += createAdCard(ad);
-                });
+                featuredContainer.innerHTML = featuredAds.map(createAdCard).join('');
+                if (featuredSection) featuredSection.style.display = '';
             } else {
-                featuredContainer.innerHTML = '<p class="no-ads">No hay anuncios destacados en este momento.</p>';
+                // No featured ads — hide the entire section
+                if (featuredSection) featuredSection.style.display = 'none';
+                else featuredContainer.innerHTML = '';
             }
         }
 
