@@ -109,7 +109,7 @@ const renderMessages = (messages) => {
 
     if (!messages.length) {
         messagesContainer.innerHTML = `
-            <div class="no-conversation-selected">
+            <div class="state-empty">
                 <i class="far fa-comment-dots"></i>
                 <h3>Sin mensajes aún</h3>
                 <p>Envía un mensaje para iniciar la conversación</p>
@@ -174,7 +174,7 @@ const openConversation = (conversationId) => {
     // Show a loading state while the first snapshot arrives
     if (messagesContainer) {
         messagesContainer.innerHTML = `
-            <div class="no-conversation-selected">
+            <div class="state-empty">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Cargando mensajes...</p>
             </div>`;
@@ -213,7 +213,7 @@ const openConversation = (conversationId) => {
 
     // Mobile: hide list, show detail
     if (window.innerWidth <= 768) {
-        if (conversationsList) conversationsList.style.display = 'none';
+        if (conversationsList) conversationsList.classList.add('hidden');
         if (messageDetail) messageDetail.classList.add('active');
     }
 };
@@ -224,8 +224,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (backToConversations) {
         backToConversations.addEventListener('click', () => {
-            if (conversationsList) conversationsList.style.display = 'block';
+            // Show list, hide detail (mobile)
+            if (conversationsList) conversationsList.classList.remove('hidden');
             if (messageDetail) messageDetail.classList.remove('active');
+            // Cancel messages listener when going back — reopen will re-subscribe
+            if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
+            currentConversationId = null;
+            currentParticipantInfo = {};
+            if (messageForm) messageForm.style.display = 'none';
+            if (messageRecipient) messageRecipient.textContent = 'Selecciona una conversación';
+            // Clear active highlight
+            document.querySelectorAll('.conversation').forEach(c => c.classList.remove('active'));
         });
     }
 
@@ -280,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (messagesContainer) {
                 messagesContainer.innerHTML = `
-                    <div class="no-conversation-selected">
+                    <div class="state-empty">
                         <i class="far fa-comment-dots"></i>
                         <h3>Selecciona una conversación</h3>
                         <p>Elige una conversación para ver los mensajes</p>
@@ -294,15 +303,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', () => {
         if (!conversationsList || !messageDetail) return;
         if (window.innerWidth > 768) {
-            conversationsList.style.display = 'block';
+            // Desktop: always show both panels
+            conversationsList.classList.remove('hidden');
             messageDetail.style.display = 'flex';
-        } else if (currentConversationId) {
-            conversationsList.style.display = 'none';
-            messageDetail.style.display = 'flex';
-        } else {
-            conversationsList.style.display = 'block';
-            messageDetail.style.display = 'none';
         }
+        // On mobile, the CSS handles visibility via .hidden and .active classes
     });
 
     // ─── Auth & conversations listener ──────────────────────────────────────
