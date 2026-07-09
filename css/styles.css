@@ -192,7 +192,7 @@ img {
     outline: none;
 }
 
-/* Knob */
+/* Knob — starts on the RIGHT (light mode = sun on right) */
 .theme-toggle::before {
     content: '';
     position: absolute;
@@ -202,43 +202,44 @@ img {
     height: 22px;
     border-radius: 50%;
     background: #fff;
+    transform: translateX(28px);
     transition: transform 0.3s cubic-bezier(.4,0,.2,1), background 0.3s;
     box-shadow: 0 1px 4px rgba(0,0,0,0.25);
     z-index: 1;
 }
 
-/* Icon inside knob — moon by default */
+/* Icon — sun on right in light mode */
 .theme-toggle .toggle-icon {
     position: absolute;
     top: 5px;
-    left: 5px;
+    left: 33px;
     font-size: 12px;
     line-height: 18px;
     width: 18px;
     text-align: center;
-    color: #546e7a;
+    color: #f57f17;
     transition: transform 0.3s, opacity 0.2s, left 0.3s;
     z-index: 2;
     pointer-events: none;
 }
 
-/* Light mode active state */
+/* Light mode: yellow track (sun) */
 html[data-theme="light"] .theme-toggle,
 .theme-toggle {
-    background: #b0bec5;
-}
-
-/* Dark mode: slide knob right, turn track yellow */
-html[data-theme="dark"] .theme-toggle {
     background: #fdd835;
 }
+
+/* Dark mode: knob slides LEFT, grey track, moon icon on left */
+html[data-theme="dark"] .theme-toggle {
+    background: #b0bec5;
+}
 html[data-theme="dark"] .theme-toggle::before {
-    transform: translateX(28px);
-    background: #fff8e1;
+    transform: translateX(0);
+    background: #fff;
 }
 html[data-theme="dark"] .theme-toggle .toggle-icon {
-    left: 33px;
-    color: #f57f17;
+    left: 5px;
+    color: #546e7a;
 }
 
 /* Header Responsive */
