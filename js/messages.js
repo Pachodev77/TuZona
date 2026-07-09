@@ -1,7 +1,6 @@
 import { auth, db, onAuthStateChanged } from './firebase-config.js';
 import {
     collection,
-    doc,
     query,
     where,
     orderBy,
@@ -27,6 +26,12 @@ let currentParticipantInfo = {};
 let messagesUnsub = null;
 let conversationsUnsub = null;
 
+// In-memory cache of conversations so openConversation always has fresh data
+// even when called from outside the snapshot callback
+let cachedConversations = [];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
 const formatTime = (value) => {
     if (!value) return '';
     const date = value?.toDate ? value.toDate() : new Date(value);
@@ -48,6 +53,17 @@ const otherParticipant = (conv) => {
     };
 };
 
+const buildAvatar = (info) => {
+    if (info?.photoURL) {
+        return `<img src="${info.photoURL}" alt="${info.name || 'Usuario'}" class="msg-avatar-img"
+                     onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <span class="msg-avatar-initials" style="display:none">${(info.name || 'U').substring(0, 2).toUpperCase()}</span>`;
+    }
+    return `<span class="msg-avatar-initials">${(info?.name || 'U').substring(0, 2).toUpperCase()}</span>`;
+};
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+
 const renderConversations = (conversations) => {
     if (!conversationsList) return;
 
@@ -65,8 +81,11 @@ const renderConversations = (conversations) => {
         const other = otherParticipant(conv);
         const active = conv.id === currentConversationId ? 'active' : '';
         const avatarContent = other.photoURL
-            ? `<img src="${other.photoURL}" alt="${other.name}" class="conv-avatar-img" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="conv-avatar-initials" style="display:none">${other.avatar}</span>`
+            ? `<img src="${other.photoURL}" alt="${other.name}" class="conv-avatar-img"
+                    onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
+               <span class="conv-avatar-initials" style="display:none">${other.avatar}</span>`
             : `<span class="conv-avatar-initials">${other.avatar}</span>`;
+
         return `
             <div class="conversation ${active}" data-conversation-id="${conv.id}">
                 <div class="conversation-avatar">${avatarContent}</div>
@@ -82,16 +101,8 @@ const renderConversations = (conversations) => {
     }).join('');
 
     conversationsList.querySelectorAll('.conversation').forEach(el => {
-        el.addEventListener('click', () => openConversation(el.dataset.conversationId, conversations));
+        el.addEventListener('click', () => openConversation(el.dataset.conversationId));
     });
-};
-
-const buildAvatar = (info) => {
-    if (info?.photoURL) {
-        return `<img src="${info.photoURL}" alt="${info.name || 'Usuario'}" class="msg-avatar-img" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <span class="msg-avatar-initials" style="display:none">${(info.name || 'U').substring(0, 2).toUpperCase()}</span>`;
-    }
-    return `<span class="msg-avatar-initials">${(info?.name || 'U').substring(0, 2).toUpperCase()}</span>`;
 };
 
 const renderMessages = (messages) => {
@@ -101,7 +112,7 @@ const renderMessages = (messages) => {
         messagesContainer.innerHTML = `
             <div class="no-conversation-selected">
                 <i class="far fa-comment-dots"></i>
-                <h3>Sin mensajes</h3>
+                <h3>Sin mensajes aún</h3>
                 <p>Envía un mensaje para iniciar la conversación</p>
             </div>`;
         return;
@@ -126,62 +137,98 @@ const renderMessages = (messages) => {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 };
 
-const openConversation = (conversationId, conversations = []) => {
+// ─── Open conversation ───────────────────────────────────────────────────────
+
+/**
+ * Opens (or re-opens) a conversation by id.
+ * Looks up participantInfo from the in-memory cache so it works even when
+ * called outside the conversations snapshot callback.
+ */
+const openConversation = (conversationId) => {
+    if (!conversationId) return;
+
     currentConversationId = conversationId;
 
+    // Highlight active row in the list
     document.querySelectorAll('.conversation').forEach(c => {
         c.classList.toggle('active', c.dataset.conversationId === conversationId);
     });
 
-    // Update the recipient name in the header and store participantInfo for rendering
-    if (currentUser) {
-        const conv = conversations.find(c => c.id === conversationId);
-        if (conv) {
-            currentParticipantInfo = conv.participantInfo || {};
-            if (messageRecipient) {
-                const otherUid = (conv.participants || []).find(uid => uid !== currentUser.uid);
-                const name = currentParticipantInfo[otherUid]?.name || 'Usuario';
-                const adTitle = conv.adTitle ? ` · ${conv.adTitle}` : '';
-                messageRecipient.textContent = name + adTitle;
-            }
+    // Update header and participant info from cache
+    const conv = cachedConversations.find(c => c.id === conversationId);
+    if (conv && currentUser) {
+        currentParticipantInfo = conv.participantInfo || {};
+        if (messageRecipient) {
+            const otherUid = (conv.participants || []).find(uid => uid !== currentUser.uid);
+            const name = currentParticipantInfo[otherUid]?.name || 'Usuario';
+            const adTitle = conv.adTitle ? ` · ${conv.adTitle}` : '';
+            messageRecipient.textContent = name + adTitle;
         }
     }
 
-    if (messagesUnsub) messagesUnsub();
+    // Cancel any existing messages listener before creating a new one
+    if (messagesUnsub) {
+        messagesUnsub();
+        messagesUnsub = null;
+    }
+
+    // Show a loading state while the first snapshot arrives
+    if (messagesContainer) {
+        messagesContainer.innerHTML = `
+            <div class="no-conversation-selected">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando mensajes...</p>
+            </div>`;
+    }
 
     const q = query(
         collection(db, 'conversations', conversationId, 'messages'),
         orderBy('createdAt', 'asc')
     );
-    messagesUnsub = onSnapshot(q, (snapshot) => {
-        renderMessages(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    }, (error) => {
-        console.error('Error al escuchar mensajes:', error);
-    });
+
+    messagesUnsub = onSnapshot(
+        q,
+        { includeMetadataChanges: false },
+        (snapshot) => {
+            // Guard: ignore stale callbacks if the conversation changed
+            if (currentConversationId !== conversationId) return;
+            renderMessages(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+        },
+        (error) => {
+            console.error('Error al escuchar mensajes:', error);
+        }
+    );
 
     if (messageForm) messageForm.style.display = 'flex';
+
+    // Mobile: hide list, show detail
     if (window.innerWidth <= 768) {
-        conversationsList.style.display = 'none';
-        messageDetail.classList.add('active');
+        if (conversationsList) conversationsList.style.display = 'none';
+        if (messageDetail) messageDetail.classList.add('active');
     }
 };
 
+// ─── Event listeners ─────────────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
+
     if (backToConversations) {
         backToConversations.addEventListener('click', () => {
-            conversationsList.style.display = 'block';
-            messageDetail.classList.remove('active');
+            if (conversationsList) conversationsList.style.display = 'block';
+            if (messageDetail) messageDetail.classList.remove('active');
         });
     }
 
     if (messageForm) {
         messageForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const text = messageInput.value.trim();
+            const text = messageInput?.value.trim();
             if (!text || !currentConversationId || !currentUser) return;
 
-            messageInput.value = '';
-            messageInput.style.height = 'auto';
+            if (messageInput) {
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+            }
             try {
                 await sendMessage(currentConversationId, { senderId: currentUser.uid, text });
             } catch (error) {
@@ -196,39 +243,46 @@ document.addEventListener('DOMContentLoaded', () => {
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-        // Enter sends, Shift+Enter adds a new line
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                messageForm.dispatchEvent(new Event('submit'));
+                messageForm?.dispatchEvent(new Event('submit'));
             }
         });
     }
 
     if (deleteConversationBtn) {
         deleteConversationBtn.addEventListener('click', async () => {
-            if (currentConversationId && confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
-                const id = currentConversationId;
-                currentConversationId = null;
-                if (messagesUnsub) messagesUnsub();
-                try {
-                    await deleteConversation(id);
-                } catch (error) {
-                    console.error('Error al eliminar conversación:', error);
-                }
+            if (!currentConversationId) return;
+            if (!confirm('¿Estás seguro de que quieres eliminar esta conversación?')) return;
+
+            const id = currentConversationId;
+            currentConversationId = null;
+            currentParticipantInfo = {};
+
+            if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
+
+            try {
+                await deleteConversation(id);
+            } catch (error) {
+                console.error('Error al eliminar conversación:', error);
+            }
+
+            if (messagesContainer) {
                 messagesContainer.innerHTML = `
                     <div class="no-conversation-selected">
                         <i class="far fa-comment-dots"></i>
                         <h3>Selecciona una conversación</h3>
                         <p>Elige una conversación para ver los mensajes</p>
                     </div>`;
-                if (messageForm) messageForm.style.display = 'none';
-                if (messageRecipient) messageRecipient.textContent = 'Selecciona una conversación';
             }
+            if (messageForm) messageForm.style.display = 'none';
+            if (messageRecipient) messageRecipient.textContent = 'Selecciona una conversación';
         });
     }
 
     window.addEventListener('resize', () => {
+        if (!conversationsList || !messageDetail) return;
         if (window.innerWidth > 768) {
             conversationsList.style.display = 'block';
             messageDetail.style.display = 'flex';
@@ -241,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ─── Auth & conversations listener ──────────────────────────────────────
     onAuthStateChanged(auth, (user) => {
         if (!user) {
             window.location.href = 'login.html';
@@ -248,33 +303,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentUser = user;
 
-        conversationsList.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Cargando conversaciones...</p></div>';
+        if (conversationsList) {
+            conversationsList.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando conversaciones...</p>
+                </div>`;
+        }
 
         const q = query(
             collection(db, 'conversations'),
             where('participants', 'array-contains', user.uid)
         );
-        conversationsUnsub = onSnapshot(q, (snapshot) => {
-            const conversations = snapshot.docs
-                .map(d => ({ id: d.id, ...d.data() }))
-                .sort((a, b) => {
-                    const ta = a.lastMessageAt?.toDate ? a.lastMessageAt.toDate() : new Date(a.lastMessageAt || 0);
-                    const tb = b.lastMessageAt?.toDate ? b.lastMessageAt.toDate() : new Date(b.lastMessageAt || 0);
-                    return tb - ta;
-                });
-            renderConversations(conversations);
 
-            // Open the conversation from the URL hash/param if present
-            const params = new URLSearchParams(window.location.search);
-            const convParam = params.get('conv');
-            if (convParam && conversations.some(c => c.id === convParam)) {
-                openConversation(convParam, conversations);
-            } else if (!currentConversationId && conversations.length) {
-                openConversation(conversations[0].id, conversations);
+        conversationsUnsub = onSnapshot(
+            q,
+            { includeMetadataChanges: false },
+            (snapshot) => {
+                const conversations = snapshot.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => {
+                        const ta = a.lastMessageAt?.toDate ? a.lastMessageAt.toDate() : new Date(a.lastMessageAt || 0);
+                        const tb = b.lastMessageAt?.toDate ? b.lastMessageAt.toDate() : new Date(b.lastMessageAt || 0);
+                        return tb - ta;
+                    });
+
+                // Update the cache every time Firestore pushes changes
+                cachedConversations = conversations;
+
+                // Re-render the list (preserves the active highlight)
+                renderConversations(conversations);
+
+                // Decide which conversation to open:
+                const params = new URLSearchParams(window.location.search);
+                const convParam = params.get('conv');
+
+                if (convParam && conversations.some(c => c.id === convParam)) {
+                    // URL param takes priority — only open once on first load
+                    if (!currentConversationId) {
+                        openConversation(convParam);
+                    }
+                } else if (!currentConversationId && conversations.length) {
+                    // Auto-open the most recent conversation on first load
+                    openConversation(conversations[0].id);
+                }
+                // If a conversation is already open, do NOT re-open it.
+                // The messages listener is independent and keeps running fine.
+            },
+            (error) => {
+                console.error('Error al cargar conversaciones:', error);
+                if (conversationsList) {
+                    conversationsList.innerHTML = '<p class="error">Error al cargar las conversaciones.</p>';
+                }
             }
-        }, (error) => {
-            console.error('Error al cargar conversaciones:', error);
-            conversationsList.innerHTML = '<p class="error">Error al cargar las conversaciones.</p>';
-        });
+        );
     });
 });
