@@ -222,8 +222,6 @@ img {
     z-index: 2;
     pointer-events: none;
 }
-
-/* Light mode: yellow track (sun) */
 html[data-theme="light"] .theme-toggle,
 .theme-toggle {
     background: #fdd835;
@@ -1095,6 +1093,13 @@ button.btn-publish i {
     color: var(--white);
     margin-bottom: 20px;
     font-size: 20px;
+}
+
+.footer-logo {
+    height: 45px;
+    width: auto;
+    margin-bottom: 14px;
+    border-radius: 6px;
 }
 
 .footer-section h4 {

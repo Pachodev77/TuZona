@@ -15,7 +15,7 @@ const footerHTML = `
 <div class="container">
     <div class="footer-content">
         <div class="footer-section">
-            <h3>TuZona</h3>
+            <a href="index.html"><img src="images/tuzona.png" alt="TuZona" class="footer-logo"></a>
             <p>El mejor lugar para comprar y vender en Colombia</p>
         </div>
         <div class="footer-section">
