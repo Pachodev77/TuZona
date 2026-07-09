@@ -117,6 +117,7 @@ img {
     margin: 0;
     padding: 0;
     display: block;
+    border-radius: 8px;
 }
 
 /* Search Bar */
@@ -180,21 +181,68 @@ img {
     white-space: nowrap;
 }
 
+/* ── Theme toggle switch ──────────────────────────────────── */
 .theme-toggle {
-    background: transparent;
+    position: relative;
+    width: 56px;
+    height: 28px;
+    background: #b0bec5;
     border: none;
-    color: var(--text-color);
-    font-size: 1.2rem;
+    border-radius: 14px;
     cursor: pointer;
-    padding: 5px 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.3s;
+    outline: none;
 }
 
-.theme-toggle:hover {
-    color: var(--primary-color);
+/* Knob */
+.theme-toggle::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1), background 0.3s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    z-index: 1;
+}
+
+/* Icon inside knob — moon by default */
+.theme-toggle .toggle-icon {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 12px;
+    line-height: 18px;
+    width: 18px;
+    text-align: center;
+    color: #546e7a;
+    transition: transform 0.3s, opacity 0.2s, left 0.3s;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Light mode active state */
+html[data-theme="light"] .theme-toggle,
+.theme-toggle {
+    background: #b0bec5;
+}
+
+/* Dark mode: slide knob right, turn track yellow */
+html[data-theme="dark"] .theme-toggle {
+    background: #fdd835;
+}
+html[data-theme="dark"] .theme-toggle::before {
+    transform: translateX(28px);
+    background: #fff8e1;
+}
+html[data-theme="dark"] .theme-toggle .toggle-icon {
+    left: 33px;
+    color: #f57f17;
 }
 
 /* Header Responsive */
@@ -309,12 +357,15 @@ img {
     background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 60%, #66bb6a 100%);
     color: #fff;
     padding: 3rem 0 2.5rem;
+    margin-top: 10px;
 }
 
 .hero-content {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    align-items: center;
+    text-align: center;
 }
 
 .hero-text h1 {
@@ -328,7 +379,7 @@ img {
 .hero-text p {
     font-size: 1rem;
     opacity: 0.92;
-    margin: 0 0 1.4rem;
+    margin: 0 auto;
     max-width: 520px;
     line-height: 1.55;
 }
@@ -337,6 +388,7 @@ img {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .btn-hero-primary {
@@ -376,6 +428,7 @@ img {
     display: flex;
     gap: 1.5rem;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .hero-stat {
@@ -1557,22 +1610,108 @@ html[data-theme="dark"] {
     --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
+/* Body & base */
+html[data-theme="dark"] body { background: #121212; color: #e0e0e0; }
+
+/* Links */
+html[data-theme="dark"] a { color: #e0e0e0; }
+
+/* Inputs */
 html[data-theme="dark"] input,
 html[data-theme="dark"] select,
 html[data-theme="dark"] textarea {
-    background-color: var(--white);
-    color: var(--text-color);
-    border-color: var(--border-color);
-}
-
-html[data-theme="dark"] .search-bar select {
     background-color: #2a2a2a;
+    color: #e0e0e0;
+    border-color: #444;
 }
+html[data-theme="dark"] .search-bar input { background: #2a2a2a; }
+html[data-theme="dark"] .search-bar select { background: #2a2a2a; color: #e0e0e0; }
+html[data-theme="dark"] .composer-input { background: #2a2a2a; color: #e0e0e0; }
 
+/* Cards & surfaces */
+html[data-theme="dark"] .ad-card,
 html[data-theme="dark"] .stat-card,
-html[data-theme="dark"] .ad-item {
-    background: #252525;
-}
+html[data-theme="dark"] .ad-item,
+html[data-theme="dark"] .article-card,
+html[data-theme="dark"] .help-category-card,
+html[data-theme="dark"] .catalog-card,
+html[data-theme="dark"] .help-contact,
+html[data-theme="dark"] .auth-container,
+html[data-theme="dark"] .publish-form-container,
+html[data-theme="dark"] .account-sidebar,
+html[data-theme="dark"] .account-content,
+html[data-theme="dark"] .messages-page,
+html[data-theme="dark"] .conversations-list,
+html[data-theme="dark"] .message-detail,
+html[data-theme="dark"] .message-header,
+html[data-theme="dark"] .message-composer { background: #252525; color: #e0e0e0; }
+
+/* Conversation items */
+html[data-theme="dark"] .conversation { border-color: #333; }
+html[data-theme="dark"] .conversation:hover { background: #2e2e2e; }
+html[data-theme="dark"] .conversation.active { background: #1a2e1a; border-left-color: var(--primary-color); }
+html[data-theme="dark"] .conversation-name { color: #e0e0e0; }
+html[data-theme="dark"] .conversation-preview { color: #aaa; }
+
+/* Messages bubbles */
+html[data-theme="dark"] .received .message-bubble { background: #333; border-color: #444; color: #e0e0e0; }
+html[data-theme="dark"] .messages { background: #1a1a1a; }
+
+/* Nav */
+html[data-theme="dark"] .main-nav { background: var(--primary-dark); }
+
+/* Header */
+html[data-theme="dark"] .header { background: #1e1e1e; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+
+/* Footer */
+html[data-theme="dark"] .footer { background: #111; }
+html[data-theme="dark"] .footer-bottom { background: rgba(0,0,0,0.4); }
+
+/* Buttons */
+html[data-theme="dark"] .btn-outline { color: var(--primary-color); border-color: var(--primary-color); }
+html[data-theme="dark"] .btn-outline:hover { color: #fff; }
+html[data-theme="dark"] .filter-btn,
+html[data-theme="dark"] .ad-filters .btn { background: #2a2a2a; color: #e0e0e0; border-color: #444; }
+
+/* Text overrides */
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span,
+html[data-theme="dark"] label { color: #e0e0e0; }
+html[data-theme="dark"] .text-light,
+html[data-theme="dark"] .breadcrumb,
+html[data-theme="dark"] .ad-location,
+html[data-theme="dark"] .message-time,
+html[data-theme="dark"] .conversation-time { color: #aaa; }
+
+/* Account nav */
+html[data-theme="dark"] .account-nav a { color: #ccc; }
+html[data-theme="dark"] .account-nav a:hover { background: #333; color: var(--primary-color); }
+html[data-theme="dark"] .account-nav a.active { background: rgba(76,175,80,0.15); color: var(--primary-color); }
+
+/* Borders */
+html[data-theme="dark"] .section-header,
+html[data-theme="dark"] .ad-meta,
+html[data-theme="dark"] .message-header,
+html[data-theme="dark"] .message-composer { border-color: #333; }
+
+/* Hero stays readable */
+html[data-theme="dark"] .hero h1,
+html[data-theme="dark"] .hero p,
+html[data-theme="dark"] .hero-stat { color: #fff; }
+
+/* Settings & forms */
+html[data-theme="dark"] .settings-container,
+html[data-theme="dark"] .settings-content,
+html[data-theme="dark"] .settings-section { background: #1e1e1e; color: #e0e0e0; }
+html[data-theme="dark"] .settings-sidebar { background: #252525; }
+html[data-theme="dark"] .settings-menu a { color: #ccc; }
+html[data-theme="dark"] .settings-menu a.active { color: var(--primary-color); }
 
 /* ============================================================
    Responsive Global
