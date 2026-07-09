@@ -227,7 +227,7 @@
             /* Conversations list: full-screen fixed, scrollable */
             .conversations-list {
                 position: fixed;
-                top: var(--header-height, 70px);
+                top: var(--header-height, 120px);
                 left: 0;
                 right: 0;
                 bottom: 0;
@@ -244,7 +244,7 @@
             /* Chat detail: full-screen fixed, flex column */
             .message-detail {
                 position: fixed;
-                top: var(--header-height, 70px);
+                top: var(--header-height, 120px);
                 left: 0;
                 right: 0;
                 bottom: 0;
@@ -254,8 +254,7 @@
                 border-radius: 0;
                 box-shadow: none;
                 z-index: 20;
-                /* Critical: explicit height so flex children can fill it */
-                height: calc(100vh - var(--header-height, 70px));
+                height: calc(100vh - var(--header-height, 120px));
                 overflow: hidden;
             }
             .message-detail.active { display: flex; }
@@ -409,5 +408,19 @@
     <script type="module" src="js/messages.js"></script>
     <script type="module" src="js/main.js"></script>
     <script type="module" src="js/footer.js"></script>
+    <script>
+        // Measure header height immediately so CSS fixed panels are positioned correctly
+        // before main.js module loads. Re-measure on resize for mobile wrap.
+        function updateHeaderHeight() {
+            var h = document.querySelector('.header');
+            if (h) document.documentElement.style.setProperty('--header-height', h.offsetHeight + 'px');
+        }
+        // Run as soon as header is in DOM
+        document.addEventListener('DOMContentLoaded', updateHeaderHeight);
+        window.addEventListener('resize', updateHeaderHeight);
+        window.addEventListener('load', updateHeaderHeight);
+        // Also run immediately in case DOMContentLoaded already fired
+        if (document.readyState !== 'loading') updateHeaderHeight();
+    </script>
 </body>
 </html>
