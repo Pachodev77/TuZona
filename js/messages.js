@@ -3,7 +3,6 @@ import {
     collection,
     query,
     where,
-    orderBy,
     onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js';
 import {
@@ -181,9 +180,10 @@ const openConversation = (conversationId) => {
             </div>`;
     }
 
+    // Query without orderBy so no composite index is required.
+    // We sort client-side after receiving the docs.
     const q = query(
-        collection(db, 'conversations', conversationId, 'messages'),
-        orderBy('createdAt', 'asc')
+        collection(db, 'conversations', conversationId, 'messages')
     );
 
     messagesUnsub = onSnapshot(
@@ -192,7 +192,17 @@ const openConversation = (conversationId) => {
         (snapshot) => {
             // Guard: ignore stale callbacks if the conversation changed
             if (currentConversationId !== conversationId) return;
-            renderMessages(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+
+            // Sort client-side by createdAt ascending
+            const messages = snapshot.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .sort((a, b) => {
+                    const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                    const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                    return ta - tb;
+                });
+
+            renderMessages(messages);
         },
         (error) => {
             console.error('Error al escuchar mensajes:', error);
